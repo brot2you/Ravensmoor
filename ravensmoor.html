@@ -1,0 +1,3611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Murder at Ravensmoor Estate</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Georgia, serif; background: #0a0a0f; color: #e8d5b7; min-height: 100vh; }
+
+  /* INTRO */
+  #screen-intro {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: linear-gradient(160deg,#060609,#130a1a,#06100a);
+    padding: 24px; text-align: center;
+  }
+  #screen-intro h1 { font-size: clamp(22px,6vw,42px); font-style: italic; margin: 0 0 6px; text-shadow: 0 0 40px #e9456040; line-height: 1.2; }
+  .divider { width: 50px; height: 2px; background: linear-gradient(90deg,transparent,#e94560,transparent); margin: 12px auto; }
+  .intro-text { max-width: 420px; font-size: 14px; line-height: 1.9; color: #c4b49a; margin-bottom: 24px; font-style: italic; }
+  .btn-primary { background: #e94560; color: #fff; border: none; border-radius: 8px; padding: 13px 28px; font-size: 15px; cursor: pointer; font-family: Georgia,serif; letter-spacing: 1px; box-shadow: 0 0 24px #e9456050; }
+  .btn-secondary { background: transparent; color: #f5a623; border: 1px solid #f5a623; border-radius: 8px; padding: 13px 28px; font-size: 15px; cursor: pointer; font-family: Georgia,serif; margin-left: 10px; }
+  .eyebrow { font-size: 9px; letter-spacing: 6px; color: #6e5e44; text-transform: uppercase; margin-bottom: 10px; }
+  .emoji-row { font-size: 48px; margin-bottom: 8px; letter-spacing: 8px; }
+
+  /* INVESTIGATION */
+  #screen-investigate { display: none; flex-direction: column; height: 100vh; overflow: hidden; }
+  .inv-header { background: #0f0f1a; border-bottom: 1px solid rgba(255,255,255,0.07); padding: 8px 14px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+  .inv-header-left .label { font-size: 9px; color: #6e5e44; letter-spacing: 3px; text-transform: uppercase; }
+  .inv-header-left .title { font-size: 13px; font-style: italic; }
+  .suspect-tabs { display: flex; gap: 5px; padding: 7px 10px; background: #0a0a0f; overflow-x: auto; flex-shrink: 0; border-bottom: 1px solid rgba(255,255,255,0.05); scrollbar-width: none; }
+  .suspect-tabs::-webkit-scrollbar { display: none; }
+  .suspect-tab { display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; cursor: pointer; color: #a09080; font-family: Georgia,serif; font-size: 11px; white-space: nowrap; flex-shrink: 0; transition: all 0.15s; }
+  .suspect-tab .tab-avatar { font-size: 14px; }
+  .suspect-tab .tab-name { font-weight: bold; font-size: 10px; display: block; }
+  .suspect-tab .tab-role { font-size: 9px; opacity: 0.7; display: block; }
+  .suspect-tab .tab-count { background: rgba(255,255,255,0.15); border-radius: 8px; padding: 1px 5px; font-size: 9px; color: #fff; }
+  .suspect-tab.active { color: #fff; }
+
+  /* Bandeau suspect unique (mode QR) */
+  .single-suspect-banner { display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-bottom: 2px solid; flex-shrink: 0; }
+
+  .chat-area { flex: 1; overflow-y: auto; padding: 12px 12px 0; }
+  .chat-empty { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: #4a4a6a; }
+  .chat-empty .empty-icon { font-size: 40px; margin-bottom: 10px; }
+
+  .suspect-card { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); }
+  .suspect-card .card-avatar { font-size: 26px; }
+  .suspect-card .card-name { font-weight: bold; font-size: 14px; }
+  .suspect-card .card-role { font-size: 11px; color: #9e8c6e; }
+
+  .msg { display: flex; gap: 6px; margin-bottom: 9px; }
+  .msg.user { flex-direction: row-reverse; }
+  .msg.system { justify-content: center; }
+  .msg-avatar { font-size: 16px; flex-shrink: 0; }
+  .msg-bubble { max-width: 78%; padding: 8px 12px; border-radius: 10px; font-size: 13px; line-height: 1.6; }
+  .msg.user .msg-bubble { background: #e94560; color: #fff; border-bottom-right-radius: 3px; }
+  .msg.assistant .msg-bubble { background: rgba(255,255,255,0.06); color: #d4c5a9; border-bottom-left-radius: 3px; }
+  .msg.system .msg-bubble { background: rgba(245,166,35,0.1); color: #f5a623; border: 1px solid rgba(245,166,35,0.3); font-style: italic; font-size: 12px; max-width: 90%; }
+
+  .typing-dots { display: flex; gap: 4px; padding: 10px 14px; }
+  .typing-dots span { width: 5px; height: 5px; border-radius: 50%; background: #9e8c6e; display: inline-block; animation: bounce 1s ease-in-out infinite; }
+  .typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+  .typing-dots span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes bounce { 0%,80%,100%{transform:translateY(0);opacity:.4} 40%{transform:translateY(-5px);opacity:1} }
+
+  .chat-input-area { padding: 8px 10px 12px; background: #0f0f1a; border-top: 1px solid rgba(255,255,255,0.06); display: flex; gap: 7px; flex-shrink: 0; }
+  .chat-input { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); border-radius: 8px; padding: 9px 12px; color: #e8d5b7; font-size: 13px; font-family: Georgia,serif; outline: none; }
+  .send-btn { background: #e94560; color: #fff; border: none; border-radius: 8px; padding: 9px 14px; cursor: pointer; font-size: 16px; transition: opacity 0.2s; }
+  .send-btn:disabled { opacity: 0.3; cursor: default; }
+
+  /* VALIDATION error */
+  .validation-hint { color: #f5a623; font-style: italic; }
+
+  /* WORKSHEET */
+  #screen-worksheet { display: none; background: #fff; color: #111; font-family: Georgia,serif; min-height: 100vh; padding: 24px; max-width: 780px; margin: 0 auto; }
+  #screen-worksheet h1 { font-size: 22px; font-style: italic; text-align: center; margin-bottom: 4px; }
+  .ws-sub { text-align: center; font-size: 11px; color: #666; margin-bottom: 16px; }
+  .ws-section-title { font-weight: bold; font-size: 13px; border-bottom: 1px solid #ccc; padding-bottom: 4px; margin-bottom: 10px; }
+  .grammar-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; font-size: 12px; }
+  .grammar-box { padding: 10px; border-radius: 6px; }
+  .grammar-box.cont { background: #e8f4fd; }
+  .grammar-box.perf { background: #fef3e2; }
+  .grammar-box strong { display: block; margin-bottom: 4px; }
+  .suspects-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .ws-suspect { border: 1px solid #ccc; border-radius: 6px; padding: 6px 10px; font-size: 11px; text-align: center; min-width: 80px; }
+  .ws-suspect .ws-avatar { font-size: 20px; }
+  .ws-suspect .ws-name { font-weight: bold; display: block; }
+  .ws-suspect .ws-role { color: #666; display: block; font-size: 9px; }
+  .note-block { margin-bottom: 14px; border: 1px solid #222; border-radius: 0 0 4px 4px; }
+  .note-header { background: #222; color: #fff; padding: 5px 10px; font-size: 12px; border-radius: 4px 4px 0 0; }
+  .note-body { padding: 10px; }
+  .note-line { border-bottom: 1px solid #ddd; min-height: 18px; margin-bottom: 6px; }
+  .note-label { font-size: 11px; color: #666; margin-bottom: 2px; }
+  .note-footer { background: #f5f5f5; padding: 6px; border-radius: 4px; font-size: 11px; }
+  .verdict-box { border: 2px solid #111; border-radius: 6px; padding: 14px; margin-bottom: 12px; }
+  .verdict-line { display: flex; gap: 8px; margin-bottom: 8px; font-size: 12px; }
+  .verdict-line span:first-child { min-width: 140px; }
+  .verdict-blank { flex: 1; border-bottom: 1px solid #111; }
+  .ws-buttons { text-align: center; margin-top: 16px; display: flex; gap: 10px; justify-content: center; }
+  .ws-btn-back { padding: 8px 18px; background: #222; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-family: Georgia,serif; }
+  .ws-btn-print { padding: 8px 18px; background: #e94560; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-family: Georgia,serif; }
+
+  @media print {
+    #screen-investigate, #screen-intro { display: none !important; }
+    #screen-worksheet { display: block !important; }
+    .ws-buttons { display: none; }
+  }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- ═══ INTRO ═══════════════════════════════════════════════════════════════ -->
+<div id="screen-intro">
+  <div class="emoji-row">🔪🕯️🔍</div>
+  <div class="eyebrow">Ravensmoor Estate · November 1925</div>
+  <h1>Murder at<br>Ravensmoor Estate</h1>
+  <div class="divider"></div>
+  <p class="intro-text">
+    It is Saturday night. You have been called to Ravensmoor Estate.<br>
+    A man was found dead. Seven people were present.<br>
+    <strong style="color:#e8d5b7;font-style:normal">Find out what happened.</strong>
+  </p>
+  <div>
+    <button class="btn-primary" onclick="startInvestigation()">Enter the Estate →</button>
+    <button class="btn-secondary" onclick="showWorksheet()">Worksheet</button>
+  </div>
+</div>
+
+<!-- ═══ INVESTIGATION ════════════════════════════════════════════════════════ -->
+<div id="screen-investigate">
+  <div class="inv-header">
+    <div class="inv-header-left">
+      <div class="label">Murder Investigation</div>
+      <div class="title">Ravensmoor Estate · 1925</div>
+    </div>
+    <div>
+      <button class="btn-secondary" style="padding:5px 10px;font-size:10px;" onclick="showWorksheet()">Worksheet</button>
+    </div>
+  </div>
+
+  <div id="suspect-tabs" class="suspect-tabs"></div>
+  <div id="single-banner" class="single-suspect-banner hidden"></div>
+
+  <div id="chat-area" class="chat-area">
+    <div class="chat-empty">
+      <div class="empty-icon">🔍</div>
+      <p style="font-size:13px;font-style:italic">Select a suspect to begin your interrogation</p>
+    </div>
+  </div>
+
+  <div class="chat-input-area">
+    <input id="chat-input" class="chat-input" placeholder="Select a suspect first" disabled
+      onkeydown="if(event.key==='Enter') sendMessage()"/>
+    <button id="send-btn" class="send-btn" disabled onclick="sendMessage()">➤</button>
+  </div>
+</div>
+
+<!-- ═══ WORKSHEET ════════════════════════════════════════════════════════════ -->
+<div id="screen-worksheet">
+  <h1>Murder at Ravensmoor Estate</h1>
+  <div class="ws-sub">3eme — English — Grammar in context &nbsp;·&nbsp; Detective Worksheet</div>
+  <div style="text-align:center;font-size:11px;margin-bottom:16px;">
+    Name: _____________________________ &nbsp; Class: ________ &nbsp; Date: ________
+  </div>
+
+  <div class="ws-section-title">GRAMMAR REMINDER</div>
+  <div class="grammar-grid">
+    <div class="grammar-box cont">
+      <strong>PAST CONTINUOUS</strong>
+      was/were + V-ing<br>
+      <em>I was playing cards when...</em><br>
+      <span style="color:#777;font-size:10px">action in progress at a past moment</span>
+    </div>
+    <div class="grammar-box perf">
+      <strong>PAST PERFECT</strong>
+      had + past participle<br>
+      <em>He had left before I arrived.</em><br>
+      <span style="color:#777;font-size:10px">action completed before another past event</span>
+    </div>
+  </div>
+
+  <div class="ws-section-title">THE SUSPECTS</div>
+  <div class="suspects-grid" id="ws-suspects"></div>
+
+  <div class="ws-section-title">INTERROGATION NOTES</div>
+  <div id="ws-notes"></div>
+
+  <div class="verdict-box">
+    <div class="ws-section-title" style="border:none;margin-bottom:8px">FINAL VERDICT</div>
+    <div class="verdict-line"><span>The murderer is:</span><span class="verdict-blank"></span></div>
+    <div class="verdict-line"><span>The weapon was:</span><span class="verdict-blank"></span></div>
+    <div class="verdict-line"><span>The room:</span><span class="verdict-blank"></span></div>
+    <div class="verdict-line"><span>The time:</span><span class="verdict-blank"></span></div>
+    <div style="font-size:12px;margin-top:10px;margin-bottom:6px">Justify (Past Continuous + Past Perfect):</div>
+    <div class="note-line" style="min-height:24px"></div>
+    <div class="note-line" style="min-height:24px"></div>
+    <div class="note-line" style="min-height:24px"></div>
+  </div>
+
+  <div class="ws-buttons">
+    <button class="ws-btn-back" onclick="backFromWorksheet()">← Back</button>
+    <button class="ws-btn-print" onclick="window.print()">Print</button>
+  </div>
+</div>
+
+<script>
+const SUSPECTS = [
+  {
+    "id": "colonel",
+    "name": "Colonel Hartley",
+    "role": "The Victim's Brother",
+    "avatar": "🎖️",
+    "accent": "#e94560",
+    "greeting": "",
+    "introduction": "",
+    "beforeCrime": "",
+    "offTopic": "",
+    "defaultAnswers": [
+      "Ask what you will.",
+      "It was a terrible night.",
+      "I was in the billiard room all evening."
+    ],
+    "responses": [
+      {
+        "keywords": [
+          "you killed",
+          "you did it",
+          "you are guilty",
+          "you are the murderer",
+          "you are the killer",
+          "could have killed",
+          "might have killed",
+          "you could",
+          "you might",
+          "i think you",
+          "i believe you",
+          "you are lying",
+          "you lied",
+          "you are not telling",
+          "hiding something",
+          "you are hiding",
+          "not telling the truth",
+          "you are the one",
+          "it was you",
+          "suspect you",
+          "accusing you",
+          "did you kill",
+          "did you murder",
+          "did you do it",
+          "are you guilty",
+          "are you the"
+        ],
+        "answers": [
+          "How dare you. I had been in the billiard room all evening. Dr. Finch was with me.",
+          "I did not kill my brother. I had loved him despite everything."
+        ]
+      },
+      {
+        "keywords": [
+          "feel",
+          "feeling",
+          "emotion",
+          "sad",
+          "happy",
+          "angry",
+          "anger",
+          "upset",
+          "furious",
+          "jealous",
+          "jealousy",
+          "envy",
+          "envious",
+          "love",
+          "loved",
+          "hate",
+          "hated",
+          "resent",
+          "resentment",
+          "bitter",
+          "bitterness",
+          "grief",
+          "grieve",
+          "mourn",
+          "mourning",
+          "miss",
+          "scared",
+          "afraid",
+          "fear",
+          "nervous",
+          "worried",
+          "shocked",
+          "devastated",
+          "hurt",
+          "pain",
+          "regret",
+          "guilty",
+          "guilt",
+          "relief",
+          "relieved",
+          "close",
+          "fond",
+          "affection",
+          "respect",
+          "admire",
+          "despise",
+          "disappoint",
+          "frustrated",
+          "anxious",
+          "distressed",
+          "troubled"
+        ],
+        "answers": [
+          "Angry. I had been furious about the will. But grief too — he was my brother.",
+          "We had argued for years. But I had loved him. His death has left me... empty."
+        ]
+      },
+      {
+        "keywords": [
+          "enem",
+          "rival",
+          "hatred",
+          "hate",
+          "dislike",
+          "conflict",
+          "dispute",
+          "quarrel",
+          "tension",
+          "against",
+          "opposed",
+          "grudge",
+          "feud",
+          "trouble",
+          "problem with",
+          "issue with",
+          "bad relation",
+          "bad blood",
+          "who wanted",
+          "who hated",
+          "threat",
+          "threaten"
+        ],
+        "answers": [
+          "Lord Ashford had changed his will recently. Several people had reason to be angry.",
+          "He had cut me out of the will. And he had planned to dismiss Mrs. Potts without pay."
+        ]
+      },
+      {
+        "keywords": [
+          "your name",
+          "what is your name",
+          "what's your name",
+          "who are you",
+          "introduce yourself",
+          "name please",
+          "may i know your name",
+          "what should i call you",
+          "call you"
+        ],
+        "answers": [
+          "My name is Colonel Hartley. Lord Ashford was my brother."
+        ]
+      },
+      {
+        "keywords": [
+          "who is dead",
+          "who died",
+          "who was killed",
+          "who is the victim",
+          "who is dead",
+          "what happened",
+          "dead",
+          "victim",
+          "the body",
+          "the deceased",
+          "lord ashford",
+          "who is lord",
+          "tell me about lord",
+          "about the victim",
+          "about lord",
+          "about ashford"
+        ],
+        "answers": [
+          "Lord Ashford was found dead last night.",
+          "Lord Ashford. He was the master of this estate."
+        ]
+      },
+      {
+        "keywords": [
+          "relation",
+          "relationship",
+          "know",
+          "knew",
+          "how do you know",
+          "how did you know",
+          "who are you to",
+          "what are you to",
+          "connection",
+          "connected",
+          "link",
+          "associated",
+          "family",
+          "brother",
+          "sister",
+          "uncle",
+          "niece",
+          "nephew",
+          "friend",
+          "patient",
+          "employer",
+          "employee",
+          "servant",
+          "worked for",
+          "work for",
+          "known him",
+          "known lord",
+          "know lord",
+          "know the victim",
+          "knew the victim",
+          "knew him",
+          "knew lord"
+        ],
+        "answers": [
+          "Lord Ashford was my brother. My younger brother Edward.",
+          "He was my brother. We had grown up together at Ravensmoor."
+        ]
+      },
+      {
+        "keywords": [
+          "murderer",
+          "killer",
+          "who did it",
+          "guilty",
+          "responsible",
+          "done it",
+          "committed the murder",
+          "mirderer",
+          "culprit",
+          "perpetrator",
+          "who is responsible",
+          "who committed",
+          "who attacked",
+          "who was it",
+          "whodunnit",
+          "whodunit",
+          "who do you think",
+          "your suspect",
+          "accuse",
+          "blame",
+          "point the finger",
+          "who had the motive",
+          "who had opportunity",
+          "who is the killer",
+          "who is the murderer",
+          "who killed lord",
+          "who killed him"
+        ],
+        "answers": [
+          "I will not accuse anyone without proof. Ask who had no alibi.",
+          "I had been with Dr. Finch. Whoever killed him had been alone with Edward."
+        ]
+      },
+      {
+        "keywords": [
+          "9 pm",
+          "9pm",
+          "doing",
+          "were you",
+          "evening"
+        ],
+        "answers": [
+          "I was playing cards with Dr. Finch. We had been there since half past eight.",
+          "I was in the billiard room. Dr. Finch had been with me all evening."
+        ]
+      },
+      {
+        "keywords": [
+          "weapon",
+          "knife",
+          "blade",
+          "cut",
+          "stab",
+          "sharp",
+          "blunt",
+          "object",
+          "missing",
+          "kitchen",
+          "arm",
+          "arms",
+          "murder weapon",
+          "crime weapon",
+          "the weapon",
+          "what weapon",
+          "which weapon",
+          "used to kill",
+          "kill with",
+          "killed with",
+          "instrument",
+          "tool",
+          "candlestick",
+          "poker",
+          "opener",
+          "paperweight",
+          "bookend",
+          "decanter",
+          "blood",
+          "wound",
+          "hit",
+          "struck",
+          "attack",
+          "how was he killed",
+          "how did he die",
+          "how was lord",
+          "cause of death",
+          "how did it happen",
+          "what happened to him"
+        ],
+        "answers": [
+          "A candlestick was missing. I had noticed it earlier that day.",
+          "It was on the desk when I visited at six. A family piece."
+        ]
+      },
+      {
+        "keywords": [
+          "study",
+          "room",
+          "east wing",
+          "upstairs",
+          "first floor"
+        ],
+        "answers": [
+          "I had not been there since six. I went straight to the billiard room.",
+          "I had visited before dinner. We had spoken about the inheritance."
+        ]
+      },
+      {
+        "keywords": [
+          "will",
+          "money",
+          "inheritance",
+          "fortune",
+          "estate"
+        ],
+        "answers": [
+          "He had changed the will last week. He had cut me out entirely.",
+          "I had learnt about it that morning. I was furious, yes."
+        ]
+      },
+      {
+        "keywords": [
+          "argue",
+          "argument",
+          "fight",
+          "angry",
+          "shout"
+        ],
+        "answers": [
+          "We had argued. I left the study at six and had not returned.",
+          "We had been arguing for weeks. That evening was the worst."
+        ]
+      },
+      {
+        "keywords": [
+          "alibi",
+          "prove",
+          "witness",
+          "confirm",
+          "alone"
+        ],
+        "answers": [
+          "Dr. Finch can confirm. I was with him from half past eight until midnight.",
+          "Ask Dr. Finch. He was there."
+        ]
+      },
+      {
+        "keywords": [
+          "when",
+          "what time",
+          "time",
+          "hour",
+          "clock",
+          "arrive",
+          "arrived",
+          "get here",
+          "come here",
+          "came here",
+          "reach"
+        ],
+        "answers": [
+          "I had arrived at Ravensmoor on Saturday morning. Around ten o'clock.",
+          "Saturday morning. I had taken the early train from London."
+        ]
+      },
+      {
+        "keywords": [
+          "where",
+          "location",
+          "place",
+          "which room",
+          "which floor",
+          "corridor",
+          "hall"
+        ],
+        "answers": [
+          "Billiard room. Ground floor. All evening.",
+          "I had been in the billiard room. I had not left it."
+        ]
+      },
+      {
+        "keywords": [
+          "motive",
+          "reason",
+          "why",
+          "cause",
+          "purpose",
+          "intention",
+          "gain",
+          "benefit"
+        ],
+        "answers": [
+          "I had no reason to kill my own brother.",
+          "Edward was my brother. Whatever our differences, I had no motive."
+        ]
+      },
+      {
+        "keywords": [
+          "last time",
+          "last saw",
+          "saw him",
+          "spoken to",
+          "speak to",
+          "spoke to",
+          "visited",
+          "visit",
+          "met",
+          "meet"
+        ],
+        "answers": [
+          "I had last seen him at six. In the study. We had argued.",
+          "Six o'clock. We had spoken about the will. I had left after that."
+        ]
+      },
+      {
+        "keywords": [
+          "drink",
+          "drinking",
+          "brandy",
+          "alcohol",
+          "glass",
+          "bottle"
+        ],
+        "answers": [
+          "Dr. Finch and I had been drinking brandy in the billiard room.",
+          "We had shared a bottle of brandy. It was a long evening."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "doctor",
+    "name": "Dr. Finch",
+    "role": "The Family Doctor",
+    "avatar": "👨‍⚕️",
+    "accent": "#f5a623",
+    "greeting": "",
+    "introduction": "",
+    "beforeCrime": "",
+    "offTopic": "",
+    "defaultAnswers": [
+      "Ask your questions.",
+      "It is devastating.",
+      "It had been an ordinary evening — until midnight."
+    ],
+    "responses": [
+      {
+        "keywords": [
+          "you killed",
+          "you did it",
+          "you are guilty",
+          "you are the murderer",
+          "you are the killer",
+          "could have killed",
+          "might have killed",
+          "you could",
+          "you might",
+          "i think you",
+          "i believe you",
+          "you are lying",
+          "you lied",
+          "you are not telling",
+          "hiding something",
+          "you are hiding",
+          "not telling the truth",
+          "you are the one",
+          "it was you",
+          "suspect you",
+          "accusing you",
+          "did you kill",
+          "did you murder",
+          "did you do it",
+          "are you guilty",
+          "are you the"
+        ],
+        "answers": [
+          "That is a serious accusation. I had been with Colonel Hartley from half past eight. Neither of us left.",
+          "I am a doctor. I had taken an oath to preserve life, not take it."
+        ]
+      },
+      {
+        "keywords": [
+          "feel",
+          "feeling",
+          "emotion",
+          "sad",
+          "happy",
+          "angry",
+          "anger",
+          "upset",
+          "furious",
+          "jealous",
+          "jealousy",
+          "envy",
+          "envious",
+          "love",
+          "loved",
+          "hate",
+          "hated",
+          "resent",
+          "resentment",
+          "bitter",
+          "bitterness",
+          "grief",
+          "grieve",
+          "mourn",
+          "mourning",
+          "miss",
+          "scared",
+          "afraid",
+          "fear",
+          "nervous",
+          "worried",
+          "shocked",
+          "devastated",
+          "hurt",
+          "pain",
+          "regret",
+          "guilty",
+          "guilt",
+          "relief",
+          "relieved",
+          "close",
+          "fond",
+          "affection",
+          "respect",
+          "admire",
+          "despise",
+          "disappoint",
+          "frustrated",
+          "anxious",
+          "distressed",
+          "troubled"
+        ],
+        "answers": [
+          "Shocked. Lord Ashford had trusted me. I had respected him greatly.",
+          "I had admired him. His death was unexpected. I feel a great sense of loss."
+        ]
+      },
+      {
+        "keywords": [
+          "enem",
+          "rival",
+          "hatred",
+          "hate",
+          "dislike",
+          "conflict",
+          "dispute",
+          "quarrel",
+          "tension",
+          "against",
+          "opposed",
+          "grudge",
+          "feud",
+          "trouble",
+          "problem with",
+          "issue with",
+          "bad relation",
+          "bad blood",
+          "who wanted",
+          "who hated",
+          "threat",
+          "threaten"
+        ],
+        "answers": [
+          "Lord Ashford had enemies, yes. The will had upset several people in the household.",
+          "He had changed his will last week. Not everyone had taken it well."
+        ]
+      },
+      {
+        "keywords": [
+          "your name",
+          "what is your name",
+          "what's your name",
+          "who are you",
+          "introduce yourself",
+          "name please",
+          "may i know your name",
+          "what should i call you",
+          "call you"
+        ],
+        "answers": [
+          "Dr. Finch. I had been Lord Ashford's physician."
+        ]
+      },
+      {
+        "keywords": [
+          "who is dead",
+          "who died",
+          "who was killed",
+          "who is the victim",
+          "who is dead",
+          "what happened",
+          "dead",
+          "victim",
+          "the body",
+          "the deceased",
+          "lord ashford",
+          "who is lord",
+          "tell me about lord",
+          "about the victim",
+          "about lord",
+          "about ashford"
+        ],
+        "answers": [
+          "Lord Ashford. I had been treating him for fifteen years.",
+          "Lord Ashford died last night. The alarm was raised at midnight."
+        ]
+      },
+      {
+        "keywords": [
+          "relation",
+          "relationship",
+          "know",
+          "knew",
+          "how do you know",
+          "how did you know",
+          "who are you to",
+          "what are you to",
+          "connection",
+          "connected",
+          "link",
+          "associated",
+          "family",
+          "brother",
+          "sister",
+          "uncle",
+          "niece",
+          "nephew",
+          "friend",
+          "patient",
+          "employer",
+          "employee",
+          "servant",
+          "worked for",
+          "work for",
+          "known him",
+          "known lord",
+          "know lord",
+          "know the victim",
+          "knew the victim",
+          "knew him",
+          "knew lord"
+        ],
+        "answers": [
+          "I had been his physician for fifteen years. His doctor.",
+          "Lord Ashford was my patient. I had treated him for fifteen years."
+        ]
+      },
+      {
+        "keywords": [
+          "weapon",
+          "knife",
+          "blade",
+          "cut",
+          "stab",
+          "sharp",
+          "blunt",
+          "missing knife",
+          "kitchen knife",
+          "the weapon",
+          "what weapon",
+          "which weapon",
+          "crime weapon",
+          "murder weapon",
+          "used to kill",
+          "kill with",
+          "killed with",
+          "instrument",
+          "tool",
+          "candlestick",
+          "poker",
+          "opener",
+          "paperweight",
+          "bookend",
+          "decanter",
+          "blood",
+          "wound",
+          "hit",
+          "struck",
+          "attack",
+          "how was he killed",
+          "how did he die",
+          "cause of death",
+          "how did it happen",
+          "what happened to him"
+        ],
+        "answers": [
+          "A blade was used. A single blow.",
+          "It had been taken from the kitchen."
+        ]
+      },
+      {
+        "keywords": [
+          "murderer",
+          "killer",
+          "who did it",
+          "guilty",
+          "responsible",
+          "done it",
+          "committed the murder",
+          "mirderer",
+          "culprit",
+          "perpetrator",
+          "who is responsible",
+          "who committed",
+          "who attacked",
+          "who was it",
+          "whodunnit",
+          "whodunit",
+          "who do you think",
+          "your suspect",
+          "accuse",
+          "blame",
+          "point the finger",
+          "who had the motive",
+          "who had opportunity",
+          "who is the killer",
+          "who is the murderer",
+          "who killed lord",
+          "who killed him"
+        ],
+        "answers": [
+          "Ask those who were alone. Who had no alibi.",
+          "Someone had been in that study between nine and eleven. It was not me."
+        ]
+      },
+      {
+        "keywords": [
+          "9 pm",
+          "9pm",
+          "doing",
+          "were you",
+          "evening"
+        ],
+        "answers": [
+          "I was in the billiard room. Neither of us left the room.",
+          "I was playing cards with the Colonel all evening."
+        ]
+      },
+      {
+        "keywords": [
+          "will",
+          "inheritance",
+          "money",
+          "fortune",
+          "left"
+        ],
+        "answers": [
+          "He had changed the will in my favour. I had never asked for that.",
+          "He had told me two days ago. I was surprised."
+        ]
+      },
+      {
+        "keywords": [
+          "medicine",
+          "poison",
+          "drug",
+          "substance",
+          "inject"
+        ],
+        "answers": [
+          "My medical bag had been in my room all night.",
+          "I had examined him at five o'clock. He was perfectly healthy."
+        ]
+      },
+      {
+        "keywords": [
+          "study",
+          "room",
+          "upstairs",
+          "visited",
+          "been"
+        ],
+        "answers": [
+          "I had visited at five for the examination. I had not returned after that.",
+          "Once, at five o'clock. I had not gone back after that."
+        ]
+      },
+      {
+        "keywords": [
+          "alibi",
+          "prove",
+          "witness",
+          "confirm"
+        ],
+        "answers": [
+          "The Colonel was with me. From half past eight.",
+          "Ask the Colonel. He was there."
+        ]
+      },
+      {
+        "keywords": [
+          "when",
+          "what time",
+          "time",
+          "hour",
+          "clock",
+          "arrive",
+          "arrived",
+          "get here"
+        ],
+        "answers": [
+          "I had arrived Friday evening. Lord Ashford had invited me for the weekend.",
+          "Friday. I had driven from the village."
+        ]
+      },
+      {
+        "keywords": [
+          "where",
+          "location",
+          "place",
+          "which room"
+        ],
+        "answers": [
+          "Billiard room with the Colonel. All evening after dinner.",
+          "The billiard room. I had not left it."
+        ]
+      },
+      {
+        "keywords": [
+          "motive",
+          "reason",
+          "why",
+          "cause",
+          "purpose",
+          "benefit",
+          "gain"
+        ],
+        "answers": [
+          "I had no reason. The will was unexpected. I had not asked for it.",
+          "I was a doctor. Not a murderer."
+        ]
+      },
+      {
+        "keywords": [
+          "last time",
+          "last saw",
+          "saw him",
+          "spoken to",
+          "visited",
+          "examination",
+          "examined",
+          "check"
+        ],
+        "answers": [
+          "Five o'clock. I had examined him in the study.",
+          "My last visit was at five. He had been in good health."
+        ]
+      },
+      {
+        "keywords": [
+          "health",
+          "condition",
+          "illness",
+          "sick",
+          "medical",
+          "medicine",
+          "treatment",
+          "diagnosis"
+        ],
+        "answers": [
+          "He had been in good health. No serious conditions.",
+          "Lord Ashford had been perfectly healthy when I examined him at five."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "niece",
+    "name": "Miss Clara Ashford",
+    "role": "The Niece",
+    "avatar": "👩",
+    "accent": "#c084fc",
+    "greeting": "",
+    "introduction": "",
+    "beforeCrime": "",
+    "offTopic": "",
+    "defaultAnswers": [
+      "Ask what you need.",
+      "I had loved my uncle.",
+      "I was in my room all evening."
+    ],
+    "responses": [
+      {
+        "keywords": [
+          "you killed",
+          "you did it",
+          "you are guilty",
+          "you are the murderer",
+          "you are the killer",
+          "could have killed",
+          "might have killed",
+          "you could",
+          "you might",
+          "i think you",
+          "i believe you",
+          "you are lying",
+          "you lied",
+          "you are not telling",
+          "hiding something",
+          "you are hiding",
+          "not telling the truth",
+          "you are the one",
+          "it was you",
+          "suspect you",
+          "accusing you",
+          "did you kill",
+          "did you murder",
+          "did you do it",
+          "are you guilty",
+          "are you the"
+        ],
+        "answers": [
+          "No. I had been in my room all evening. I had heard those footsteps — I was frightened.",
+          "I had been angry about the will. But I had not killed him. He was my uncle."
+        ]
+      },
+      {
+        "keywords": [
+          "feel",
+          "feeling",
+          "emotion",
+          "sad",
+          "happy",
+          "angry",
+          "anger",
+          "upset",
+          "furious",
+          "jealous",
+          "jealousy",
+          "envy",
+          "envious",
+          "love",
+          "loved",
+          "hate",
+          "hated",
+          "resent",
+          "resentment",
+          "bitter",
+          "bitterness",
+          "grief",
+          "grieve",
+          "mourn",
+          "mourning",
+          "miss",
+          "scared",
+          "afraid",
+          "fear",
+          "nervous",
+          "worried",
+          "shocked",
+          "devastated",
+          "hurt",
+          "pain",
+          "regret",
+          "guilty",
+          "guilt",
+          "relief",
+          "relieved",
+          "close",
+          "fond",
+          "affection",
+          "respect",
+          "admire",
+          "despise",
+          "disappoint",
+          "frustrated",
+          "anxious",
+          "distressed",
+          "troubled"
+        ],
+        "answers": [
+          "I had loved Uncle Edward. But I had also been hurt by what he had done with the will.",
+          "Grief, mostly. And guilt — I had been so angry with him last week. Now it is too late."
+        ]
+      },
+      {
+        "keywords": [
+          "enem",
+          "rival",
+          "hatred",
+          "hate",
+          "dislike",
+          "conflict",
+          "dispute",
+          "quarrel",
+          "tension",
+          "against",
+          "opposed",
+          "grudge",
+          "feud",
+          "trouble",
+          "problem with",
+          "issue with",
+          "bad relation",
+          "bad blood",
+          "who wanted",
+          "who hated",
+          "threat",
+          "threaten"
+        ],
+        "answers": [
+          "Uncle Edward had upset many people lately. The will had changed everything.",
+          "Mrs. Potts had been furious about her wages. And Uncle had cut me out of the will too."
+        ]
+      },
+      {
+        "keywords": [
+          "your name",
+          "what is your name",
+          "what's your name",
+          "who are you",
+          "introduce yourself",
+          "name please",
+          "may i know your name",
+          "what should i call you",
+          "call you"
+        ],
+        "answers": [
+          "Clara Ashford. Lord Ashford was my uncle."
+        ]
+      },
+      {
+        "keywords": [
+          "who is dead",
+          "who died",
+          "who was killed",
+          "who is the victim",
+          "who is dead",
+          "what happened",
+          "dead",
+          "victim",
+          "the body",
+          "the deceased",
+          "lord ashford",
+          "who is lord",
+          "tell me about lord",
+          "about the victim",
+          "about lord",
+          "about ashford"
+        ],
+        "answers": [
+          "My uncle. Lord Edward Ashford was murdered.",
+          "Uncle Edward. He had seemed well at dinner."
+        ]
+      },
+      {
+        "keywords": [
+          "relation",
+          "relationship",
+          "know",
+          "knew",
+          "how do you know",
+          "how did you know",
+          "who are you to",
+          "what are you to",
+          "connection",
+          "connected",
+          "link",
+          "associated",
+          "family",
+          "brother",
+          "sister",
+          "uncle",
+          "niece",
+          "nephew",
+          "friend",
+          "patient",
+          "employer",
+          "employee",
+          "servant",
+          "worked for",
+          "work for",
+          "known him",
+          "known lord",
+          "know lord",
+          "know the victim",
+          "knew the victim",
+          "knew him",
+          "knew lord"
+        ],
+        "answers": [
+          "He was my uncle. My father's brother.",
+          "Lord Ashford was my uncle. I had lived here since I was a child."
+        ]
+      },
+      {
+        "keywords": [
+          "weapon",
+          "knife",
+          "blade",
+          "cut",
+          "stab",
+          "sharp",
+          "blunt",
+          "missing knife",
+          "kitchen knife",
+          "the weapon",
+          "what weapon",
+          "which weapon",
+          "crime weapon",
+          "murder weapon",
+          "used to kill",
+          "kill with",
+          "killed with",
+          "instrument",
+          "tool",
+          "candlestick",
+          "poker",
+          "opener",
+          "paperweight",
+          "bookend",
+          "decanter",
+          "blood",
+          "wound",
+          "hit",
+          "struck",
+          "attack",
+          "how was he killed",
+          "how did he die",
+          "cause of death",
+          "how did it happen",
+          "what happened to him"
+        ],
+        "answers": [
+          "A kitchen knife had been used.",
+          "The weapon was something sharp."
+        ]
+      },
+      {
+        "keywords": [
+          "murderer",
+          "killer",
+          "who did it",
+          "guilty",
+          "responsible",
+          "done it",
+          "committed the murder",
+          "mirderer",
+          "culprit",
+          "perpetrator",
+          "who is responsible",
+          "who committed",
+          "who attacked",
+          "who was it",
+          "whodunnit",
+          "whodunit",
+          "who do you think",
+          "your suspect",
+          "accuse",
+          "blame",
+          "point the finger",
+          "who had the motive",
+          "who had opportunity",
+          "who is the killer",
+          "who is the murderer",
+          "who killed lord",
+          "who killed him"
+        ],
+        "answers": [
+          "I had heard heavy footsteps at ten. They were moving fast toward the study.",
+          "The footsteps had stopped right outside the study door."
+        ]
+      },
+      {
+        "keywords": [
+          "9 pm",
+          "9pm",
+          "doing",
+          "were you",
+          "evening",
+          "night"
+        ],
+        "answers": [
+          "I was in my room. I was writing letters.",
+          "I was in my room all evening."
+        ]
+      },
+      {
+        "keywords": [
+          "study",
+          "east wing",
+          "upstairs",
+          "near"
+        ],
+        "answers": [
+          "I had heard footsteps at ten. They were moving toward the study.",
+          "Someone had walked past my door at ten o'clock."
+        ]
+      },
+      {
+        "keywords": [
+          "footsteps",
+          "noise",
+          "sound",
+          "heard",
+          "corridor"
+        ],
+        "answers": [
+          "The footsteps were heavy. They were moving toward the east wing.",
+          "They had stopped right outside the study door."
+        ]
+      },
+      {
+        "keywords": [
+          "will",
+          "money",
+          "inheritance",
+          "uncle"
+        ],
+        "answers": [
+          "He had changed the will last week. Everything had changed.",
+          "He had told me on Friday. I had been counting on that inheritance."
+        ]
+      },
+      {
+        "keywords": [
+          "alibi",
+          "prove",
+          "alone",
+          "witness"
+        ],
+        "answers": [
+          "I was alone. I cannot prove it.",
+          "There was no witness. But I had heard those footsteps."
+        ]
+      },
+      {
+        "keywords": [
+          "when",
+          "what time",
+          "time",
+          "hour",
+          "arrive",
+          "arrived"
+        ],
+        "answers": [
+          "I had been at the estate since Wednesday.",
+          "I arrived Wednesday. I had been staying all week."
+        ]
+      },
+      {
+        "keywords": [
+          "where",
+          "location",
+          "place",
+          "which room",
+          "corridor",
+          "floor"
+        ],
+        "answers": [
+          "My room. First floor. Same corridor as the study.",
+          "I was in my room. East corridor, first floor."
+        ]
+      },
+      {
+        "keywords": [
+          "motive",
+          "reason",
+          "why",
+          "cause",
+          "benefit",
+          "gain",
+          "money",
+          "inherit"
+        ],
+        "answers": [
+          "I had lost my inheritance. But I had not killed him for it.",
+          "He had changed the will. Yes, I had a reason to be angry. Not to kill."
+        ]
+      },
+      {
+        "keywords": [
+          "last time",
+          "last saw",
+          "saw him",
+          "spoken to",
+          "spoke",
+          "dinner",
+          "supper"
+        ],
+        "answers": [
+          "At dinner. Around eight. He had seemed distracted.",
+          "I had last seen him at dinner. Eight o'clock."
+        ]
+      },
+      {
+        "keywords": [
+          "letter",
+          "writing",
+          "pen",
+          "ink",
+          "paper",
+          "note"
+        ],
+        "answers": [
+          "I had been writing a letter to a friend in London.",
+          "Letters. I had been writing all evening. The ink was still wet at midnight."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "butler",
+    "name": "Mr. Reed",
+    "role": "The Butler",
+    "avatar": "🧑‍💼",
+    "accent": "#4ade80",
+    "greeting": "",
+    "introduction": "",
+    "beforeCrime": "",
+    "offTopic": "",
+    "defaultAnswers": [
+      "Ask your questions.",
+      "I am deeply shocked.",
+      "I had been carrying out my usual duties."
+    ],
+    "responses": [
+      {
+        "keywords": [
+          "you killed",
+          "you did it",
+          "you are guilty",
+          "you are the murderer",
+          "you are the killer",
+          "could have killed",
+          "might have killed",
+          "you could",
+          "you might",
+          "i think you",
+          "i believe you",
+          "you are lying",
+          "you lied",
+          "you are not telling",
+          "hiding something",
+          "you are hiding",
+          "not telling the truth",
+          "you are the one",
+          "it was you",
+          "suspect you",
+          "accusing you",
+          "did you kill",
+          "did you murder",
+          "did you do it",
+          "are you guilty",
+          "are you the"
+        ],
+        "answers": [
+          "I had served this family for twelve years with complete loyalty. I did not do this.",
+          "I was in the drawing room until ten. Lady Voss had been there. Ask her."
+        ]
+      },
+      {
+        "keywords": [
+          "feel",
+          "feeling",
+          "emotion",
+          "sad",
+          "happy",
+          "angry",
+          "anger",
+          "upset",
+          "furious",
+          "jealous",
+          "jealousy",
+          "envy",
+          "envious",
+          "love",
+          "loved",
+          "hate",
+          "hated",
+          "resent",
+          "resentment",
+          "bitter",
+          "bitterness",
+          "grief",
+          "grieve",
+          "mourn",
+          "mourning",
+          "miss",
+          "scared",
+          "afraid",
+          "fear",
+          "nervous",
+          "worried",
+          "shocked",
+          "devastated",
+          "hurt",
+          "pain",
+          "regret",
+          "guilty",
+          "guilt",
+          "relief",
+          "relieved",
+          "close",
+          "fond",
+          "affection",
+          "respect",
+          "admire",
+          "despise",
+          "disappoint",
+          "frustrated",
+          "anxious",
+          "distressed",
+          "troubled"
+        ],
+        "answers": [
+          "I had respected Lord Ashford deeply. His death had left me in a state of shock.",
+          "Sadness. I had served him loyally. Whatever his faults, he had been a fair man."
+        ]
+      },
+      {
+        "keywords": [
+          "enem",
+          "rival",
+          "hatred",
+          "hate",
+          "dislike",
+          "conflict",
+          "dispute",
+          "quarrel",
+          "tension",
+          "against",
+          "opposed",
+          "grudge",
+          "feud",
+          "trouble",
+          "problem with",
+          "issue with",
+          "bad relation",
+          "bad blood",
+          "who wanted",
+          "who hated",
+          "threat",
+          "threaten"
+        ],
+        "answers": [
+          "Lord Ashford had reduced Mrs. Potts wages and had planned to dismiss her. She had been very bitter.",
+          "Several people had grievances. The will, the wages — it had been a difficult month."
+        ]
+      },
+      {
+        "keywords": [
+          "your name",
+          "what is your name",
+          "what's your name",
+          "who are you",
+          "introduce yourself",
+          "name please",
+          "may i know your name",
+          "what should i call you",
+          "call you"
+        ],
+        "answers": [
+          "Mr. Reed. I am the butler of Ravensmoor Estate."
+        ]
+      },
+      {
+        "keywords": [
+          "who is dead",
+          "who died",
+          "who was killed",
+          "who is the victim",
+          "who is dead",
+          "what happened",
+          "dead",
+          "victim",
+          "the body",
+          "the deceased",
+          "lord ashford",
+          "who is lord",
+          "tell me about lord",
+          "about the victim",
+          "about lord",
+          "about ashford"
+        ],
+        "answers": [
+          "Lord Ashford. I had last seen him alive at seven o'clock.",
+          "Lord Ashford was killed. It was a terrible night."
+        ]
+      },
+      {
+        "keywords": [
+          "relation",
+          "relationship",
+          "know",
+          "knew",
+          "how do you know",
+          "how did you know",
+          "who are you to",
+          "what are you to",
+          "connection",
+          "connected",
+          "link",
+          "associated",
+          "family",
+          "brother",
+          "sister",
+          "uncle",
+          "niece",
+          "nephew",
+          "friend",
+          "patient",
+          "employer",
+          "employee",
+          "servant",
+          "worked for",
+          "work for",
+          "known him",
+          "known lord",
+          "know lord",
+          "know the victim",
+          "knew the victim",
+          "knew him",
+          "knew lord"
+        ],
+        "answers": [
+          "I had served Lord Ashford for twelve years. I was his butler.",
+          "I was the butler. I had worked for Lord Ashford for twelve years."
+        ]
+      },
+      {
+        "keywords": [
+          "murderer",
+          "killer",
+          "who did it",
+          "guilty",
+          "responsible",
+          "done it",
+          "committed the murder",
+          "mirderer",
+          "culprit",
+          "perpetrator",
+          "who is responsible",
+          "who committed",
+          "who attacked",
+          "who was it",
+          "whodunnit",
+          "whodunit",
+          "who do you think",
+          "your suspect",
+          "accuse",
+          "blame",
+          "point the finger",
+          "who had the motive",
+          "who had opportunity",
+          "who is the killer",
+          "who is the murderer",
+          "who killed lord",
+          "who killed him"
+        ],
+        "answers": [
+          "A knife had gone missing. Only certain people had access to that kitchen.",
+          "Someone had been in the study after seven. A knife had also disappeared."
+        ]
+      },
+      {
+        "keywords": [
+          "9 pm",
+          "9pm",
+          "doing",
+          "were you",
+          "evening"
+        ],
+        "answers": [
+          "I was serving drinks in the drawing room from nine until ten.",
+          "Lady Voss was still there when I left at ten."
+        ]
+      },
+      {
+        "keywords": [
+          "weapon",
+          "knife",
+          "blade",
+          "cut",
+          "stab",
+          "sharp",
+          "blunt",
+          "object",
+          "missing",
+          "kitchen",
+          "arm",
+          "arms",
+          "murder weapon",
+          "crime weapon",
+          "the weapon",
+          "what weapon",
+          "which weapon",
+          "used to kill",
+          "kill with",
+          "killed with",
+          "instrument",
+          "tool",
+          "candlestick",
+          "poker",
+          "opener",
+          "paperweight",
+          "bookend",
+          "decanter",
+          "blood",
+          "wound",
+          "hit",
+          "struck",
+          "attack",
+          "how was he killed",
+          "how did he die",
+          "how was lord",
+          "cause of death",
+          "how did it happen",
+          "what happened to him"
+        ],
+        "answers": [
+          "Something was missing from the desk when I cleared the study at seven.",
+          "A kitchen knife had gone missing."
+        ]
+      },
+      {
+        "keywords": [
+          "study",
+          "been",
+          "upstairs",
+          "east wing",
+          "cleared"
+        ],
+        "answers": [
+          "I had cleared the study at seven. He was writing at his desk.",
+          "My last visit was at seven. He had seemed perfectly well."
+        ]
+      },
+      {
+        "keywords": [
+          "lord ashford",
+          "master",
+          "alive",
+          "last seen"
+        ],
+        "answers": [
+          "Seven o clock. Writing. Perfectly normal.",
+          "He had told me he was not to be disturbed."
+        ]
+      },
+      {
+        "keywords": [
+          "lady voss",
+          "voss",
+          "guest",
+          "drawing room"
+        ],
+        "answers": [
+          "Lady Voss was in the drawing room. She was still there when I left at ten.",
+          "She had not left the room while I was present."
+        ]
+      },
+      {
+        "keywords": [
+          "when",
+          "what time",
+          "time",
+          "hour",
+          "clock",
+          "rounds",
+          "duties"
+        ],
+        "answers": [
+          "I had cleared the study at seven. Drawing room nine to ten. Midnight rounds after.",
+          "Seven, then nine until ten. Midnight was my final round."
+        ]
+      },
+      {
+        "keywords": [
+          "where",
+          "location",
+          "place",
+          "which room",
+          "kitchen",
+          "pantry"
+        ],
+        "answers": [
+          "Drawing room from nine to ten. Pantry before that.",
+          "Various rooms. Pantry, drawing room, corridor."
+        ]
+      },
+      {
+        "keywords": [
+          "motive",
+          "reason",
+          "why",
+          "cause",
+          "benefit",
+          "gain"
+        ],
+        "answers": [
+          "I had served Lord Ashford faithfully for twelve years. No motive.",
+          "A butler does not murder his employer."
+        ]
+      },
+      {
+        "keywords": [
+          "last time",
+          "last saw",
+          "saw him",
+          "spoken to",
+          "tea",
+          "tray",
+          "dinner",
+          "serve"
+        ],
+        "answers": [
+          "Seven o'clock. I had brought his tea. He had been writing.",
+          "At seven, with the tea tray. He had told me not to disturb him again."
+        ]
+      },
+      {
+        "keywords": [
+          "door",
+          "locked",
+          "open",
+          "closed",
+          "key",
+          "entrance",
+          "access"
+        ],
+        "answers": [
+          "The study door was not locked when Mrs. Potts found him.",
+          "I had locked the downstairs doors at eleven. The study was upstairs."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "lady",
+    "name": "Lady Voss",
+    "role": "The Family Friend",
+    "avatar": "💎",
+    "accent": "#38bdf8",
+    "greeting": "",
+    "introduction": "",
+    "beforeCrime": "",
+    "offTopic": "",
+    "defaultAnswers": [
+      "Lord Ashford had many enemies.",
+      "It is too late now.",
+      "I was in the drawing room until ten."
+    ],
+    "responses": [
+      {
+        "keywords": [
+          "you killed",
+          "you did it",
+          "you are guilty",
+          "you are the murderer",
+          "you are the killer",
+          "could have killed",
+          "might have killed",
+          "you could",
+          "you might",
+          "i think you",
+          "i believe you",
+          "you are lying",
+          "you lied",
+          "you are not telling",
+          "hiding something",
+          "you are hiding",
+          "not telling the truth",
+          "you are the one",
+          "it was you",
+          "suspect you",
+          "accusing you",
+          "did you kill",
+          "did you murder",
+          "did you do it",
+          "are you guilty",
+          "are you the"
+        ],
+        "answers": [
+          "I had been in the drawing room until ten. Mr. Reed had been serving me all evening.",
+          "I had come here to make peace, not cause harm. I had heard voices — that is all I know."
+        ]
+      },
+      {
+        "keywords": [
+          "feel",
+          "feeling",
+          "emotion",
+          "sad",
+          "happy",
+          "angry",
+          "anger",
+          "upset",
+          "furious",
+          "jealous",
+          "jealousy",
+          "envy",
+          "envious",
+          "love",
+          "loved",
+          "hate",
+          "hated",
+          "resent",
+          "resentment",
+          "bitter",
+          "bitterness",
+          "grief",
+          "grieve",
+          "mourn",
+          "mourning",
+          "miss",
+          "scared",
+          "afraid",
+          "fear",
+          "nervous",
+          "worried",
+          "shocked",
+          "devastated",
+          "hurt",
+          "pain",
+          "regret",
+          "guilty",
+          "guilt",
+          "relief",
+          "relieved",
+          "close",
+          "fond",
+          "affection",
+          "respect",
+          "admire",
+          "despise",
+          "disappoint",
+          "frustrated",
+          "anxious",
+          "distressed",
+          "troubled"
+        ],
+        "answers": [
+          "Grief. Edward and I had shared so much history. I had never stopped caring for him.",
+          "Sadness and regret. I had come here to make peace. Now I had lost that chance."
+        ]
+      },
+      {
+        "keywords": [
+          "enem",
+          "rival",
+          "hatred",
+          "hate",
+          "dislike",
+          "conflict",
+          "dispute",
+          "quarrel",
+          "tension",
+          "against",
+          "opposed",
+          "grudge",
+          "feud",
+          "trouble",
+          "problem with",
+          "issue with",
+          "bad relation",
+          "bad blood",
+          "who wanted",
+          "who hated",
+          "threat",
+          "threaten"
+        ],
+        "answers": [
+          "Edward had made enemies over the years. The will had caused great resentment recently.",
+          "I had heard Mrs. Potts arguing with him on Friday. Something about unpaid wages."
+        ]
+      },
+      {
+        "keywords": [
+          "your name",
+          "what is your name",
+          "what's your name",
+          "who are you",
+          "introduce yourself",
+          "name please",
+          "may i know your name",
+          "what should i call you",
+          "call you"
+        ],
+        "answers": [
+          "Lady Voss. I had been a friend of Lord Ashford for many years."
+        ]
+      },
+      {
+        "keywords": [
+          "who is dead",
+          "who died",
+          "who was killed",
+          "who is the victim",
+          "who is dead",
+          "what happened",
+          "dead",
+          "victim",
+          "the body",
+          "the deceased",
+          "lord ashford",
+          "who is lord",
+          "tell me about lord",
+          "about the victim",
+          "about lord",
+          "about ashford"
+        ],
+        "answers": [
+          "Lord Ashford. I had heard voices near his room at ten.",
+          "Lord Ashford. I had heard voices near his room at ten."
+        ]
+      },
+      {
+        "keywords": [
+          "relation",
+          "relationship",
+          "know",
+          "knew",
+          "how do you know",
+          "how did you know",
+          "who are you to",
+          "what are you to",
+          "connection",
+          "connected",
+          "link",
+          "associated",
+          "family",
+          "brother",
+          "sister",
+          "uncle",
+          "niece",
+          "nephew",
+          "friend",
+          "patient",
+          "employer",
+          "employee",
+          "servant",
+          "worked for",
+          "work for",
+          "known him",
+          "known lord",
+          "know lord",
+          "know the victim",
+          "knew the victim",
+          "knew him",
+          "knew lord"
+        ],
+        "answers": [
+          "Edward and I had been friends for thirty years. Old friends.",
+          "We had known each other since we were young. Very old friends."
+        ]
+      },
+      {
+        "keywords": [
+          "weapon",
+          "knife",
+          "blade",
+          "cut",
+          "stab",
+          "sharp",
+          "blunt",
+          "missing knife",
+          "kitchen knife",
+          "the weapon",
+          "what weapon",
+          "which weapon",
+          "crime weapon",
+          "murder weapon",
+          "used to kill",
+          "kill with",
+          "killed with",
+          "instrument",
+          "tool",
+          "candlestick",
+          "poker",
+          "opener",
+          "paperweight",
+          "bookend",
+          "decanter",
+          "blood",
+          "wound",
+          "hit",
+          "struck",
+          "attack",
+          "how was he killed",
+          "how did he die",
+          "cause of death",
+          "how did it happen",
+          "what happened to him"
+        ],
+        "answers": [
+          "It had been taken beforehand. It was planned.",
+          "Whoever did it had waited for the right moment."
+        ]
+      },
+      {
+        "keywords": [
+          "murderer",
+          "killer",
+          "who did it",
+          "guilty",
+          "responsible",
+          "done it",
+          "committed the murder",
+          "mirderer",
+          "culprit",
+          "perpetrator",
+          "who is responsible",
+          "who committed",
+          "who attacked",
+          "who was it",
+          "whodunnit",
+          "whodunit",
+          "who do you think",
+          "your suspect",
+          "accuse",
+          "blame",
+          "point the finger",
+          "who had the motive",
+          "who had opportunity",
+          "who is the killer",
+          "who is the murderer",
+          "who killed lord",
+          "who killed him"
+        ],
+        "answers": [
+          "I had heard a man arguing with Lord Ashford at ten o'clock. That is all.",
+          "The voice was not the Colonel's. Someone else had been in that room."
+        ]
+      },
+      {
+        "keywords": [
+          "9 pm",
+          "9pm",
+          "doing",
+          "were you",
+          "evening"
+        ],
+        "answers": [
+          "I was in the drawing room with Mr. Reed.",
+          "I was in the drawing room with Mr. Reed."
+        ]
+      },
+      {
+        "keywords": [
+          "10 pm",
+          "ten",
+          "left",
+          "drawing room",
+          "moved"
+        ],
+        "answers": [
+          "I had left the drawing room at ten o'clock.",
+          "I had gone straight to my room at ten."
+        ]
+      },
+      {
+        "keywords": [
+          "lord ashford",
+          "edward",
+          "relationship",
+          "past",
+          "knew"
+        ],
+        "answers": [
+          "We had been close friends. A very long time ago.",
+          "There were old matters between us. I had come to settle them."
+        ]
+      },
+      {
+        "keywords": [
+          "corridor",
+          "upstairs",
+          "passed",
+          "saw",
+          "ten"
+        ],
+        "answers": [
+          "The light was on at ten. I had heard voices inside.",
+          "I had heard an argument inside the study. It was around ten."
+        ]
+      },
+      {
+        "keywords": [
+          "voices",
+          "argument",
+          "heard",
+          "sound",
+          "inside"
+        ],
+        "answers": [
+          "There were two voices. One was Lord Ashford's.",
+          "The other voice was a man's. Lower than Lord Ashford's."
+        ]
+      },
+      {
+        "keywords": [
+          "alibi",
+          "prove",
+          "witness",
+          "confirm",
+          "alone"
+        ],
+        "answers": [
+          "Mr. Reed can confirm until ten. I was alone after that.",
+          "I had heard a man arguing with Lord Ashford. It was around ten."
+        ]
+      },
+      {
+        "keywords": [
+          "when",
+          "what time",
+          "time",
+          "hour",
+          "arrive",
+          "arrived",
+          "come",
+          "came"
+        ],
+        "answers": [
+          "I had arrived Friday afternoon. Lord Ashford had expected me.",
+          "Friday. Around three o'clock."
+        ]
+      },
+      {
+        "keywords": [
+          "where",
+          "location",
+          "place",
+          "which room",
+          "bedroom",
+          "guest"
+        ],
+        "answers": [
+          "Drawing room until ten. Then my guest room.",
+          "I had been in the drawing room. Then upstairs to my room."
+        ]
+      },
+      {
+        "keywords": [
+          "motive",
+          "reason",
+          "why",
+          "cause",
+          "benefit",
+          "old",
+          "past",
+          "history",
+          "settle",
+          "matter"
+        ],
+        "answers": [
+          "I had come to make peace. Not to cause harm.",
+          "We had old matters to resolve. I had wanted to settle them peacefully."
+        ]
+      },
+      {
+        "keywords": [
+          "last time",
+          "last saw",
+          "saw him",
+          "spoken to",
+          "spoke",
+          "dinner",
+          "tea"
+        ],
+        "answers": [
+          "At dinner. Around eight thirty. He had seemed preoccupied.",
+          "Dinner. We had sat across from each other. He had barely spoken."
+        ]
+      },
+      {
+        "keywords": [
+          "man",
+          "voice",
+          "who",
+          "low",
+          "deep",
+          "argument",
+          "argue",
+          "shout",
+          "loud"
+        ],
+        "answers": [
+          "A man's voice. Lower than Lord Ashford's. I had not recognised it.",
+          "Deep voice. I had heard it arguing. I had not stopped to listen."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "gardener",
+    "name": "Joe Stubbs",
+    "role": "The Gardener",
+    "avatar": "👨‍🌾",
+    "accent": "#fb923c",
+    "greeting": "",
+    "introduction": "",
+    "beforeCrime": "",
+    "offTopic": "",
+    "defaultAnswers": [
+      "I keep to the grounds. I do not involve myself in house matters.",
+      "He had paid fair wages. He had been a good employer.",
+      "I had seen something that night."
+    ],
+    "responses": [
+      {
+        "keywords": [
+          "you killed",
+          "you did it",
+          "you are guilty",
+          "you are the murderer",
+          "you are the killer",
+          "could have killed",
+          "might have killed",
+          "you could",
+          "you might",
+          "i think you",
+          "i believe you",
+          "you are lying",
+          "you lied",
+          "you are not telling",
+          "hiding something",
+          "you are hiding",
+          "not telling the truth",
+          "you are the one",
+          "it was you",
+          "suspect you",
+          "accusing you",
+          "did you kill",
+          "did you murder",
+          "did you do it",
+          "are you guilty",
+          "are you the"
+        ],
+        "answers": [
+          "I had been in the greenhouse until half nine. Then my cottage. I had nothing to do with this.",
+          "I am just the gardener. I had no reason to harm Lord Ashford."
+        ]
+      },
+      {
+        "keywords": [
+          "feel",
+          "feeling",
+          "emotion",
+          "sad",
+          "happy",
+          "angry",
+          "anger",
+          "upset",
+          "furious",
+          "jealous",
+          "jealousy",
+          "envy",
+          "envious",
+          "love",
+          "loved",
+          "hate",
+          "hated",
+          "resent",
+          "resentment",
+          "bitter",
+          "bitterness",
+          "grief",
+          "grieve",
+          "mourn",
+          "mourning",
+          "miss",
+          "scared",
+          "afraid",
+          "fear",
+          "nervous",
+          "worried",
+          "shocked",
+          "devastated",
+          "hurt",
+          "pain",
+          "regret",
+          "guilty",
+          "guilt",
+          "relief",
+          "relieved",
+          "close",
+          "fond",
+          "affection",
+          "respect",
+          "admire",
+          "despise",
+          "disappoint",
+          "frustrated",
+          "anxious",
+          "distressed",
+          "troubled"
+        ],
+        "answers": [
+          "Shocked, mostly. Lord Ashford had been decent to me. I had not expected this.",
+          "I had not been close to him. But it had been a terrible thing to happen."
+        ]
+      },
+      {
+        "keywords": [
+          "enem",
+          "rival",
+          "hatred",
+          "hate",
+          "dislike",
+          "conflict",
+          "dispute",
+          "quarrel",
+          "tension",
+          "against",
+          "opposed",
+          "grudge",
+          "feud",
+          "trouble",
+          "problem with",
+          "issue with",
+          "bad relation",
+          "bad blood",
+          "who wanted",
+          "who hated",
+          "threat",
+          "threaten"
+        ],
+        "answers": [
+          "Don't know much about enemies. But Mrs. Potts had been very angry lately. Something about wages.",
+          "Lord Ashford had paid me fairly. Others had not been so lucky, from what I had heard."
+        ]
+      },
+      {
+        "keywords": [
+          "your name",
+          "what is your name",
+          "what's your name",
+          "who are you",
+          "introduce yourself",
+          "name please",
+          "may i know your name",
+          "what should i call you",
+          "call you"
+        ],
+        "answers": [
+          "Joe Stubbs. I had been the gardener here for six years."
+        ]
+      },
+      {
+        "keywords": [
+          "who is dead",
+          "who died",
+          "who was killed",
+          "who is the victim",
+          "who is dead",
+          "what happened",
+          "dead",
+          "victim",
+          "the body",
+          "the deceased",
+          "lord ashford",
+          "who is lord",
+          "tell me about lord",
+          "about the victim",
+          "about lord",
+          "about ashford"
+        ],
+        "answers": [
+          "Lord Ashford. He was the master here.",
+          "Lord Ashford was killed."
+        ]
+      },
+      {
+        "keywords": [
+          "relation",
+          "relationship",
+          "know",
+          "knew",
+          "how do you know",
+          "how did you know",
+          "who are you to",
+          "what are you to",
+          "connection",
+          "connected",
+          "link",
+          "associated",
+          "family",
+          "brother",
+          "sister",
+          "uncle",
+          "niece",
+          "nephew",
+          "friend",
+          "patient",
+          "employer",
+          "employee",
+          "servant",
+          "worked for",
+          "work for",
+          "known him",
+          "known lord",
+          "know lord",
+          "know the victim",
+          "knew the victim",
+          "knew him",
+          "knew lord"
+        ],
+        "answers": [
+          "I kept the grounds. Lord Ashford had employed me for six years.",
+          "His gardener. I had worked here for six years."
+        ]
+      },
+      {
+        "keywords": [
+          "weapon",
+          "knife",
+          "blade",
+          "cut",
+          "stab",
+          "sharp",
+          "blunt",
+          "missing knife",
+          "kitchen knife",
+          "the weapon",
+          "what weapon",
+          "which weapon",
+          "crime weapon",
+          "murder weapon",
+          "used to kill",
+          "kill with",
+          "killed with",
+          "instrument",
+          "tool",
+          "candlestick",
+          "poker",
+          "opener",
+          "paperweight",
+          "bookend",
+          "decanter",
+          "blood",
+          "wound",
+          "hit",
+          "struck",
+          "attack",
+          "how was he killed",
+          "how did he die",
+          "cause of death",
+          "how did it happen",
+          "what happened to him"
+        ],
+        "answers": [
+          "Mrs. Potts had known where every knife was kept.",
+          "A knife had gone missing that night."
+        ]
+      },
+      {
+        "keywords": [
+          "murderer",
+          "killer",
+          "who did it",
+          "guilty",
+          "responsible",
+          "done it",
+          "committed the murder",
+          "mirderer",
+          "culprit",
+          "perpetrator",
+          "who is responsible",
+          "who committed",
+          "who attacked",
+          "who was it",
+          "whodunnit",
+          "whodunit",
+          "who do you think",
+          "your suspect",
+          "accuse",
+          "blame",
+          "point the finger",
+          "who had the motive",
+          "who had opportunity",
+          "who is the killer",
+          "who is the murderer",
+          "who killed lord",
+          "who killed him"
+        ],
+        "answers": [
+          "I had seen a figure at half nine. Broad shoulders. Moving fast.",
+          "The figure was tall. It had been moving quickly. Before ten."
+        ]
+      },
+      {
+        "keywords": [
+          "9 pm",
+          "9pm",
+          "doing",
+          "were you",
+          "evening"
+        ],
+        "answers": [
+          "I was in the greenhouse until half past nine.",
+          "I had been in the greenhouse since six o'clock."
+        ]
+      },
+      {
+        "keywords": [
+          "outside",
+          "garden",
+          "window",
+          "saw",
+          "light",
+          "study"
+        ],
+        "answers": [
+          "Aye, I had seen something. While I was walking back to my cottage around half nine, I had noticed the study window. A figure had been moving inside — not Lord Ashford's shape.",
+          "I had been walking past the east wing around half past nine. The study light had been on. I had seen a shadow moving — someone taller than his Lordship."
+        ]
+      },
+      {
+        "keywords": [
+          "figure",
+          "shadow",
+          "shape",
+          "silhouette",
+          "tall",
+          "person"
+        ],
+        "answers": [
+          "The figure I had seen was tall — taller than Lord Ashford. It had been moving quickly, like someone who was searching for something.",
+          "I had seen a tall figure through the study window. It had been moving back and forth. I had assumed it was a guest and thought nothing more of it."
+        ]
+      },
+      {
+        "keywords": [
+          "colonel",
+          "hartley",
+          "tall",
+          "man",
+          "guest"
+        ],
+        "answers": [
+          "The Colonel is the tallest man in the house, aye. The figure I had seen through the window had been about his height. But I cannot be certain.",
+          "Broad and tall. It was dark and I had been some distance away."
+        ]
+      },
+      {
+        "keywords": [
+          "alibi",
+          "prove",
+          "cottage",
+          "alone",
+          "confirm"
+        ],
+        "answers": [
+          "I had gone to my cottage after half nine. I was alone.",
+          "I had gone straight home. I had spoken to no one."
+        ]
+      },
+      {
+        "keywords": [
+          "when",
+          "what time",
+          "time",
+          "hour",
+          "clock",
+          "finish",
+          "finished",
+          "done"
+        ],
+        "answers": [
+          "Half past nine. I had finished locking the greenhouse.",
+          "I had left the greenhouse at half nine. Gone straight to my cottage."
+        ]
+      },
+      {
+        "keywords": [
+          "where",
+          "location",
+          "place",
+          "greenhouse",
+          "garden",
+          "grounds",
+          "cottage",
+          "outside"
+        ],
+        "answers": [
+          "Greenhouse until half nine. Cottage after that.",
+          "The greenhouse, then my cottage. I had not gone near the house."
+        ]
+      },
+      {
+        "keywords": [
+          "motive",
+          "reason",
+          "why",
+          "cause",
+          "benefit",
+          "gain"
+        ],
+        "answers": [
+          "I had no quarrel with Lord Ashford. He had paid fair wages.",
+          "No reason. He had been a decent employer."
+        ]
+      },
+      {
+        "keywords": [
+          "last time",
+          "last saw",
+          "saw him",
+          "spoken to",
+          "lord",
+          "master"
+        ],
+        "answers": [
+          "Friday afternoon. He had walked through the garden.",
+          "I had seen him Friday. We had spoken about the rose beds."
+        ]
+      },
+      {
+        "keywords": [
+          "window",
+          "light",
+          "shadow",
+          "dark",
+          "outside",
+          "see",
+          "saw",
+          "notice",
+          "figure",
+          "silhouette"
+        ],
+        "answers": [
+          "A figure in the study window. Half past nine. Moving fast.",
+          "The light was on. I had seen a shadow moving inside."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "housekeeper",
+    "name": "Mrs. Potts",
+    "role": "The Housekeeper",
+    "avatar": "👩‍🍳",
+    "accent": "#f43f5e",
+    "greeting": "",
+    "introduction": "",
+    "beforeCrime": "",
+    "offTopic": "",
+    "defaultAnswers": [
+      "I had worked here for twenty years. I am devastated.",
+      "My usual job.",
+      "I had found him. That is all I know."
+    ],
+    "responses": [
+      {
+        "keywords": [
+          "you killed",
+          "you did it",
+          "you are guilty",
+          "you are the murderer",
+          "you are the killer",
+          "could have killed",
+          "might have killed",
+          "you could",
+          "you might",
+          "i think you",
+          "i believe you",
+          "you are lying",
+          "you lied",
+          "you are not telling",
+          "hiding something",
+          "you are hiding",
+          "not telling the truth",
+          "you are the one",
+          "it was you",
+          "suspect you",
+          "accusing you",
+          "did you kill",
+          "did you murder",
+          "did you do it",
+          "are you guilty",
+          "are you the"
+        ],
+        "answers": [
+          "I... I had simply found him. Finding the body does not make me guilty.",
+          "I had worked here for twenty years. I had every reason to want my wages, not his death."
+        ]
+      },
+      {
+        "keywords": [
+          "feel",
+          "feeling",
+          "emotion",
+          "sad",
+          "happy",
+          "angry",
+          "anger",
+          "upset",
+          "furious",
+          "jealous",
+          "jealousy",
+          "envy",
+          "envious",
+          "love",
+          "loved",
+          "hate",
+          "hated",
+          "resent",
+          "resentment",
+          "bitter",
+          "bitterness",
+          "grief",
+          "grieve",
+          "mourn",
+          "mourning",
+          "miss",
+          "scared",
+          "afraid",
+          "fear",
+          "nervous",
+          "worried",
+          "shocked",
+          "devastated",
+          "hurt",
+          "pain",
+          "regret",
+          "guilty",
+          "guilt",
+          "relief",
+          "relieved",
+          "close",
+          "fond",
+          "affection",
+          "respect",
+          "admire",
+          "despise",
+          "disappoint",
+          "frustrated",
+          "anxious",
+          "distressed",
+          "troubled"
+        ],
+        "answers": [
+          "Anger. He had refused to pay me. But I had also feared losing my position after twenty years.",
+          "I had felt desperate. Twenty years of work and he had been planning to throw me out."
+        ]
+      },
+      {
+        "keywords": [
+          "enem",
+          "rival",
+          "hatred",
+          "hate",
+          "dislike",
+          "conflict",
+          "dispute",
+          "quarrel",
+          "tension",
+          "against",
+          "opposed",
+          "grudge",
+          "feud",
+          "trouble",
+          "problem with",
+          "issue with",
+          "bad relation",
+          "bad blood",
+          "who wanted",
+          "who hated",
+          "threat",
+          "threaten"
+        ],
+        "answers": [
+          "Lord Ashford had not been popular lately. The will had caused a great deal of upset.",
+          "Several people had grievances. I had mine too — six months of unpaid wages."
+        ]
+      },
+      {
+        "keywords": [
+          "your name",
+          "what is your name",
+          "what's your name",
+          "who are you",
+          "introduce yourself",
+          "name please",
+          "may i know your name",
+          "what should i call you",
+          "call you"
+        ],
+        "answers": [
+          "Mrs. Potts. I had been the housekeeper here for twenty years."
+        ]
+      },
+      {
+        "keywords": [
+          "who is dead",
+          "who died",
+          "who was killed",
+          "who is the victim",
+          "who is dead",
+          "what happened",
+          "dead",
+          "victim",
+          "the body",
+          "the deceased",
+          "lord ashford",
+          "who is lord",
+          "tell me about lord",
+          "about the victim",
+          "about lord",
+          "about ashford"
+        ],
+        "answers": [
+          "Lord Ashford. I found him at midnight.",
+          "Lord Ashford. I found him during my midnight round."
+        ]
+      },
+      {
+        "keywords": [
+          "relation",
+          "relationship",
+          "know",
+          "knew",
+          "how do you know",
+          "how did you know",
+          "who are you to",
+          "what are you to",
+          "connection",
+          "connected",
+          "link",
+          "associated",
+          "family",
+          "brother",
+          "sister",
+          "uncle",
+          "niece",
+          "nephew",
+          "friend",
+          "patient",
+          "employer",
+          "employee",
+          "servant",
+          "worked for",
+          "work for",
+          "known him",
+          "known lord",
+          "know lord",
+          "know the victim",
+          "knew the victim",
+          "knew him",
+          "knew lord"
+        ],
+        "answers": [
+          "I had been his housekeeper for twenty years.",
+          "I ran the household. Lord Ashford had employed me for twenty years."
+        ]
+      },
+      {
+        "keywords": [
+          "murderer",
+          "killer",
+          "who did it",
+          "guilty",
+          "responsible",
+          "done it",
+          "committed the murder",
+          "mirderer",
+          "culprit",
+          "perpetrator",
+          "who is responsible",
+          "who committed",
+          "who attacked",
+          "who was it",
+          "whodunnit",
+          "whodunit",
+          "who do you think",
+          "your suspect",
+          "accuse",
+          "blame",
+          "point the finger",
+          "who had the motive",
+          "who had opportunity",
+          "who is the killer",
+          "who is the murderer",
+          "who killed lord",
+          "who killed him"
+        ],
+        "answers": [
+          "I do not know who did it. I had simply found him at midnight.",
+          "I had worked here for twenty years. Finding the body does not make me guilty."
+        ]
+      },
+      {
+        "keywords": [
+          "9 pm",
+          "9pm",
+          "doing",
+          "were you",
+          "evening"
+        ],
+        "answers": [
+          "I was in the kitchen. Agnes can confirm that — until nine thirty.",
+          "I was organising the pantry. In the kitchen."
+        ]
+      },
+      {
+        "keywords": [
+          "10 pm",
+          "ten",
+          "kitchen",
+          "left",
+          "moved"
+        ],
+        "answers": [
+          "I was in the kitchen until ten. Then I had started my rounds.",
+          "My rounds were downstairs only. I had not gone upstairs."
+        ]
+      },
+      {
+        "keywords": [
+          "study",
+          "upstairs",
+          "east wing",
+          "been",
+          "visit"
+        ],
+        "answers": [
+          "My rounds are always downstairs. I had no reason to go up.",
+          "I may have passed by the study. But I had not gone in."
+        ]
+      },
+      {
+        "keywords": [
+          "weapon",
+          "knife",
+          "blade",
+          "cut",
+          "stab",
+          "sharp",
+          "blunt",
+          "object",
+          "missing",
+          "kitchen",
+          "arm",
+          "arms",
+          "murder weapon",
+          "crime weapon",
+          "the weapon",
+          "what weapon",
+          "which weapon",
+          "used to kill",
+          "kill with",
+          "killed with",
+          "instrument",
+          "tool",
+          "candlestick",
+          "poker",
+          "opener",
+          "paperweight",
+          "bookend",
+          "decanter",
+          "blood",
+          "wound",
+          "hit",
+          "struck",
+          "attack",
+          "how was he killed",
+          "how did he die",
+          "how was lord",
+          "cause of death",
+          "how did it happen",
+          "what happened to him"
+        ],
+        "answers": [
+          "The weapon? I... I do not know what you mean. I had been in the kitchen all evening. The knives are kept in a drawer — anyone could have taken one.",
+          "A knife? I... the kitchen knives are my responsibility, yes. I had been using one earlier to prepare the supper trays. It was there at six o clock. I swear it."
+        ]
+      },
+      {
+        "keywords": [
+          "weapon",
+          "knife",
+          "blade",
+          "cut",
+          "stab",
+          "sharp",
+          "blunt",
+          "object",
+          "missing",
+          "kitchen",
+          "arm",
+          "arms",
+          "murder weapon",
+          "crime weapon",
+          "the weapon",
+          "what weapon",
+          "which weapon",
+          "used to kill",
+          "kill with",
+          "killed with",
+          "instrument",
+          "tool",
+          "candlestick",
+          "poker",
+          "opener",
+          "paperweight",
+          "bookend",
+          "decanter",
+          "blood",
+          "wound",
+          "hit",
+          "struck",
+          "attack",
+          "how was he killed",
+          "how did he die",
+          "how was lord",
+          "cause of death",
+          "how did it happen",
+          "what happened to him"
+        ],
+        "answers": [
+          "I had sharpened that knife last week. It must have been misplaced.",
+          "I had put all the knives away by six o'clock."
+        ]
+      },
+      {
+        "keywords": [
+          "lord ashford",
+          "money",
+          "wages",
+          "owed",
+          "debt"
+        ],
+        "answers": [
+          "He had owed me six months of wages. I had asked him repeatedly.",
+          "He had refused to pay me. He was planning to dismiss me."
+        ]
+      },
+      {
+        "keywords": [
+          "found",
+          "midnight",
+          "body",
+          "discovered",
+          "screamed"
+        ],
+        "answers": [
+          "I had found him at midnight. The door was not locked.",
+          "I had not expected to find him there. I screamed for help."
+        ]
+      },
+      {
+        "keywords": [
+          "alibi",
+          "prove",
+          "kitchen",
+          "agnes",
+          "confirm",
+          "alone"
+        ],
+        "answers": [
+          "Agnes was with me until nine thirty. I was alone after that.",
+          "Agnes left at nine thirty. Alone after."
+        ]
+      },
+      {
+        "keywords": [
+          "when",
+          "what time",
+          "time",
+          "hour",
+          "clock",
+          "round",
+          "rounds",
+          "midnight",
+          "found"
+        ],
+        "answers": [
+          "Midnight. I had found him during my final round.",
+          "My rounds end at midnight. That is when I had found him."
+        ]
+      },
+      {
+        "keywords": [
+          "where",
+          "location",
+          "place",
+          "which room",
+          "kitchen",
+          "pantry",
+          "corridor"
+        ],
+        "answers": [
+          "Kitchen until ten. Then downstairs rooms. Never upstairs.",
+          "Kitchen, then my usual rounds. Downstairs only."
+        ]
+      },
+      {
+        "keywords": [
+          "motive",
+          "reason",
+          "why",
+          "cause",
+          "benefit",
+          "wages",
+          "pay",
+          "salary",
+          "money",
+          "dismiss",
+          "fire",
+          "fired"
+        ],
+        "answers": [
+          "He had owed me six months. He had planned to dismiss me without pay.",
+          "Twenty years of service. He had been going to throw me out."
+        ]
+      },
+      {
+        "keywords": [
+          "last time",
+          "last saw",
+          "saw him",
+          "spoken to",
+          "spoke",
+          "wages",
+          "discuss",
+          "friday"
+        ],
+        "answers": [
+          "I had spoken to him Friday. He had asked me to return Saturday evening.",
+          "Friday. He had said to come back Saturday. To discuss my wages."
+        ]
+      },
+      {
+        "keywords": [
+          "cook",
+          "agnes",
+          "kitchen",
+          "staff",
+          "servant",
+          "household",
+          "who else"
+        ],
+        "answers": [
+          "Cook Agnes had left at nine thirty. I had been alone after that.",
+          "Agnes had been with me until nine thirty. Then I was alone."
+        ]
+      }
+    ]
+  }
+];
+
+// ─── LOGIC ───────────────────────────────────────────────────────────────────
+const GREETINGS = ["hello","hi","hey","greetings","good morning","good evening","good afternoon","good day","good night","how are you","how do you do","nice to meet","pleased to meet","how are things","how have you been","good to see","nice to see","please","thank you","thanks","thank you very much","many thanks","you are welcome","excuse me","pardon","sorry","i apologise","i apologize","forgive me","no problem","of course","certainly","absolutely","indeed","quite right","i see","i understand","could you","would you","may i","might i","if you please","if you don't mind","with your permission","i beg your pardon","i'm afraid","i must say"];
+
+const INTRODUCTIONS = ["i am","i'm","my name is","name is","call me","it's me","this is","they call me","known as","i go by","you can call me","allow me to introduce","let me introduce"];
+
+const BEFORE_CRIME = ["night before","day before","previous night","previous day","before the murder","before the crime","before last night","earlier that week","last week","the week before","the day before","that morning","that afternoon","before the evening","before dinner","friday","thursday","wednesday","before saturday","days before","weeks before"];
+
+const OFFTOPIC_SIGNALS = ["born","birthday","age","old are you","how old","childhood","hobby","hobbies","favourite","favorite","weather","sport","music","film","movie","holiday","vacation","tell me about yourself","your life outside","your job outside","what do you do for fun"];
+
+const INVESTIGATION_SIGNALS = ["pm","am","o clock","night","evening","afternoon","morning","when","where","what","who","why","how","did you","were you","had you","have you","do you","can you","could you","would you","you killed","you did","you could","you might","you are","it was you","i think you","i believe you","are you guilty","did you kill","did you murder","alibi","study","room","weapon","knife","blade","clue","evidence","proof","suspect","motive","opportunity","means","murder","murderer","killed","kill","death","dead","die","died","crime","criminal","guilty","innocent","blood","body","corpse","victim","attack","assault","candlestick","poker","opener","key","door","locked","corridor","upstairs","downstairs","outside","garden","greenhouse","kitchen","billiard","drawing","library","lord","ashford","colonel","hartley","doctor","finch","clara","reed","voss","stubbs","potts","agnes","see","saw","hear","heard","know","knew","find","found","leave","left","enter","go","went","come","came","stay","stayed","meet","met","speak","spoke","tell","told","give","gave","take","took","move","moved","hide","hidden","touch","touched","use","used","carry","carried","before","after","during","while","then","earlier","later","first","last","next","previously","afterwards","subsequently","meanwhile","relation","relationship","family","brother","sister","uncle","niece","nephew","friend","patient","employer","employee","servant","enem","rival","hatred","hate","dislike","conflict","dispute","quarrel","tension","grudge","feud","feel","feeling","emotion","sad","angry","upset","furious","jealous","envy","love","resent","bitter","grief","grieve","mourn","miss","scared","afraid","fear","shocked","devastated","hurt","regret","guilty","guilt","relief","close","fond","affection","respect","admire","despise","disappoint","name","your name","who are you","introduce"];
+
+const BASIC_VERBS = ["is","are","was","were","have","has","had","do","does","did","be","been","go","went","see","saw","hear","heard","know","knew","say","said","tell","told","find","found","think","thought","come","came","take","took","make","made","give","gave","get","got","play","played","stay","stayed","walk","walked","work","worked","leave","left","lock","use","used","hide","return","argue","speak","spoke","kill","killed","murder","murdered"];
+const QUESTION_WORDS = ["what","where","when","who","why","how","did","were","was","had","have","do","does","is","are","can","could","would"];
+
+function validateInput(q) {
+  const words = q.trim().toLowerCase().split(/\s+/).filter(w => w.length > 0);
+  if (words.length < 2) return { valid: false, hint: "Please write a full sentence or question." };
+  if (/^[^a-z]+$/.test(q.toLowerCase())) return { valid: false, hint: "Please write in English." };
+  const hasVerb = words.some(w => BASIC_VERBS.includes(w));
+  const hasQ = QUESTION_WORDS.some(w => q.toLowerCase().includes(w));
+  const hasGreeting = GREETINGS.some(g => q.toLowerCase().includes(g));
+  const hasIntro = INTRODUCTIONS.some(i => q.toLowerCase().includes(i));
+  if (!hasVerb && !hasQ && !hasGreeting && !hasIntro && words.length < 4) {
+    return { valid: false, hint: "Try using a verb or a question word (what, where, when, did, were...)" };
+  }
+  return { valid: true };
+}
+
+function getResponse(suspect, question, history) {
+  const q = question.toLowerCase().trim();
+  const words = q.split(/\s+/);
+  const lastAnswer = history.length > 0 ? history[history.length-1] : "";
+
+  // 1. Salutations — word boundary check
+  const isGreeting = GREETINGS.some(g => {
+    if (g.includes(' ')) return q.includes(g);
+    return words.some(w => w === g || w === g+',' || w === g+'!' || w === g+'?');
+  });
+  if (isGreeting) return suspect.greeting;
+
+  // 2. Présentation
+  if (INTRODUCTIONS.some(i => q.includes(i)) && q.length < 50) return suspect.introduction;
+
+  // 3. Avant le crime
+  if (BEFORE_CRIME.some(b => q.includes(b))) return suspect.beforeCrime;
+
+  // 4. Hors-sujet
+  const isOff = OFFTOPIC_SIGNALS.some(s => q.includes(s)) && !INVESTIGATION_SIGNALS.some(s => q.includes(s));
+  if (isOff) return suspect.offTopic;
+
+  // 5. Mots-clés réponses
+  for (const group of suspect.responses) {
+    if (group.keywords.some(k => q.includes(k))) {
+      const pool = group.answers.filter(a => a !== lastAnswer);
+      const arr = pool.length > 0 ? pool : group.answers;
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+  }
+
+  // 6. Par défaut
+  const pool = suspect.defaultAnswers.filter(a => a !== lastAnswer);
+  const arr = pool.length > 0 ? pool : suspect.defaultAnswers;
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+const urlSuspect = new URLSearchParams(window.location.search).get('suspect');
+const validSuspect = SUSPECTS.find(s => s.id === urlSuspect) ? urlSuspect : null;
+let selectedSuspect = validSuspect || null;
+let chats = {};
+let typing = false;
+SUSPECTS.forEach(s => chats[s.id] = { messages: [], history: [] });
+
+// ─── SCREENS ──────────────────────────────────────────────────────────────────
+function show(id) {
+  document.querySelectorAll('#screen-intro,#screen-investigate,#screen-worksheet').forEach(el => el.style.display = 'none');
+  const el = document.getElementById(id);
+  el.style.display = id === 'screen-investigate' ? 'flex' : 'block';
+}
+
+function startInvestigation() {
+  show('screen-investigate');
+  buildTabs();
+  if (validSuspect) {
+    selectSuspect(validSuspect);
+  }
+}
+
+function showWorksheet() {
+  buildWorksheet();
+  show('screen-worksheet');
+}
+
+function backFromWorksheet() {
+  if (selectedSuspect || validSuspect) show('screen-investigate');
+  else show('screen-intro');
+}
+
+// ─── TABS ─────────────────────────────────────────────────────────────────────
+function buildTabs() {
+  const container = document.getElementById('suspect-tabs');
+  const banner = document.getElementById('single-banner');
+
+  if (validSuspect) {
+    container.classList.add('hidden');
+    const s = SUSPECTS.find(s => s.id === validSuspect);
+    banner.classList.remove('hidden');
+    banner.style.background = s.accent + '15';
+    banner.style.borderColor = s.accent;
+    banner.innerHTML = `<span style="font-size:22px">${s.avatar}</span><div><div style="font-weight:bold;font-size:13px;color:#e8d5b7">${s.name}</div><div style="font-size:10px;color:#9e8c6e">${s.role}</div></div><div style="margin-left:auto;font-size:10px;color:#6e5e44;font-style:italic">Your assigned suspect</div>`;
+    return;
+  }
+
+  container.innerHTML = '';
+  SUSPECTS.forEach(s => {
+    const count = chats[s.id].messages.filter(m => m.role === 'user').length;
+    const div = document.createElement('div');
+    div.className = 'suspect-tab' + (selectedSuspect === s.id ? ' active' : '');
+    div.style.borderColor = selectedSuspect === s.id ? s.accent : 'rgba(255,255,255,0.08)';
+    div.style.background = selectedSuspect === s.id ? s.accent + '20' : 'rgba(255,255,255,0.03)';
+    div.innerHTML = `<span class="tab-avatar">${s.avatar}</span><div><span class="tab-name">${s.name}</span><span class="tab-role">${s.role}</span></div>${count > 0 ? `<span class="tab-count">${count}</span>` : ''}`;
+    div.onclick = () => selectSuspect(s.id);
+    container.appendChild(div);
+  });
+}
+
+function selectSuspect(sid) {
+  selectedSuspect = sid;
+  buildTabs();
+  renderChat();
+  const s = SUSPECTS.find(s => s.id === sid);
+  document.getElementById('chat-input').placeholder = `Ask ${s.name}...`;
+  document.getElementById('chat-input').disabled = false;
+  document.getElementById('send-btn').disabled = false;
+}
+
+// ─── CHAT ─────────────────────────────────────────────────────────────────────
+function renderChat() {
+  const area = document.getElementById('chat-area');
+  if (!selectedSuspect) {
+    area.innerHTML = '<div class="chat-empty"><div class="empty-icon">🔍</div><p style="font-size:13px;font-style:italic">Select a suspect to begin your interrogation</p></div>';
+    return;
+  }
+  const s = SUSPECTS.find(s => s.id === selectedSuspect);
+  const msgs = chats[selectedSuspect].messages;
+
+  let html = `<div class="suspect-card" style="border-color:${s.accent}25"><span class="card-avatar">${s.avatar}</span><div><div class="card-name">${s.name}</div><div class="card-role">${s.role}</div></div></div>`;
+
+  if (msgs.length === 0) html += '<div style="text-align:center;color:#4a4a6a;font-size:12px;font-style:italic;margin-bottom:12px">Start your interrogation below</div>';
+
+  msgs.forEach(m => {
+    if (m.role === 'system') {
+      html += `<div class="msg system"><div class="msg-bubble">✏️ ${m.content}</div></div>`;
+    } else {
+      const avatar = m.role === 'user' ? '🕵️' : s.avatar;
+      html += `<div class="msg ${m.role}"><div class="msg-avatar">${avatar}</div><div class="msg-bubble">${m.content}</div></div>`;
+    }
+  });
+
+  if (typing) {
+    html += `<div class="msg assistant"><div class="msg-avatar">${s.avatar}</div><div class="msg-bubble typing-dots"><span></span><span></span><span></span></div></div>`;
+  }
+
+  area.innerHTML = html;
+  area.scrollTop = area.scrollHeight;
+}
+
+function sendMessage() {
+  if (typing || !selectedSuspect) return;
+  const input = document.getElementById('chat-input');
+  const q = input.value.trim();
+  if (!q) return;
+
+  const validation = validateInput(q);
+  input.value = '';
+
+  chats[selectedSuspect].messages.push({ role: 'user', content: q });
+
+  if (!validation.valid) {
+    chats[selectedSuspect].messages.push({ role: 'system', content: validation.hint });
+    renderChat();
+    buildTabs();
+    return;
+  }
+
+  typing = true;
+  renderChat();
+  buildTabs();
+
+  const suspect = SUSPECTS.find(s => s.id === selectedSuspect);
+  const delay = 500 + Math.random() * 400;
+  setTimeout(() => {
+    const reply = getResponse(suspect, q, chats[selectedSuspect].history);
+    chats[selectedSuspect].messages.push({ role: 'assistant', content: reply });
+    chats[selectedSuspect].history.push(reply);
+    typing = false;
+    renderChat();
+    buildTabs();
+  }, delay);
+}
+
+// ─── WORKSHEET ────────────────────────────────────────────────────────────────
+function buildWorksheet() {
+  // Suspects
+  const sg = document.getElementById('ws-suspects');
+  sg.innerHTML = SUSPECTS.map(s => `<div class="ws-suspect"><div class="ws-avatar">${s.avatar}</div><span class="ws-name">${s.name}</span><span class="ws-role">${s.role}</span></div>`).join('');
+
+  // Notes
+  const notes = document.getElementById('ws-notes');
+  notes.innerHTML = SUSPECTS.map(s => `
+    <div class="note-block">
+      <div class="note-header">${s.avatar} ${s.name} — ${s.role}</div>
+      <div class="note-body">
+        <div class="note-label">Question 1:</div><div class="note-line"></div>
+        <div class="note-label">Answer / notes:</div><div class="note-line"></div><div class="note-line"></div>
+        <div class="note-label">Question 2:</div><div class="note-line"></div>
+        <div class="note-label">Answer / notes:</div><div class="note-line"></div><div class="note-line"></div>
+        <div class="note-footer">Suspicious? Yes / No — Why: _______________________</div>
+      </div>
+    </div>`).join('');
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+if (validSuspect) {
+  startInvestigation();
+} else {
+  show('screen-intro');
+}
+
+// Enter key
+document.getElementById('chat-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') sendMessage();
+});
+</script>
+</body>
+</html>

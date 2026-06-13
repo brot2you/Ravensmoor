@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Murder at Ravensmoor — Suspect QR Codes</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=IM+Fell+English:ital@0;1&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'IM Fell English', Georgia, serif;
+    background: #f5f0e8;
+    color: #1a1008;
+    padding: 24px;
+  }
+
+  .page-header {
+    text-align: center;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 3px double #3a2a0a;
+  }
+  .page-header .eyebrow {
+    font-size: 10px;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: #7a5c2a;
+    margin-bottom: 8px;
+  }
+  .page-header h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 28px;
+    font-style: italic;
+    color: #1a1008;
+    margin-bottom: 6px;
+  }
+  .page-header .sub {
+    font-size: 13px;
+    color: #5a4020;
+    font-style: italic;
+  }
+  .page-header .instruction {
+    margin-top: 12px;
+    font-size: 12px;
+    color: #3a2a0a;
+    background: #e8dfc8;
+    border: 1px solid #c8b48a;
+    border-radius: 6px;
+    padding: 8px 16px;
+    display: inline-block;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    max-width: 900px;
+    margin: 0 auto 28px;
+  }
+
+  .card {
+    background: #fff;
+    border: 1px solid #c8b48a;
+    border-radius: 8px;
+    padding: 14px 10px 12px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    break-inside: avoid;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 4px; left: 4px; right: 4px; bottom: 4px;
+    border: 1px solid rgba(200,180,138,0.4);
+    border-radius: 5px;
+    pointer-events: none;
+  }
+
+  .card .corner {
+    position: absolute;
+    top: 8px;
+    font-size: 10px;
+    color: #c8a060;
+    font-style: italic;
+  }
+  .card .corner.left { left: 10px; }
+  .card .corner.right { right: 10px; }
+
+  .card .avatar {
+    font-size: 32px;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .card .name {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 3px;
+    color: #1a1008;
+  }
+  .card .role {
+    font-size: 10px;
+    color: #7a5c2a;
+    font-style: italic;
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+  }
+  .card .qr-wrap {
+    background: #fff;
+    border: 1px solid #e0d0b0;
+    border-radius: 4px;
+    padding: 8px;
+    display: inline-block;
+    margin-bottom: 10px;
+  }
+
+  .card .hint strong {
+    display: block;
+    font-size: 10px;
+    color: #3a2a0a;
+    font-style: normal;
+    margin-bottom: 2px;
+  }
+
+  /* Couleur accent par suspect */
+  .card[data-id="colonel"] { border-top: 3px solid #e94560; }
+  .card[data-id="doctor"]  { border-top: 3px solid #f5a623; }
+  .card[data-id="niece"]   { border-top: 3px solid #c084fc; }
+  .card[data-id="butler"]  { border-top: 3px solid #4ade80; }
+  .card[data-id="lady"]    { border-top: 3px solid #38bdf8; }
+  .card[data-id="gardener"]{ border-top: 3px solid #fb923c; }
+  .card[data-id="housekeeper"]{ border-top: 3px solid #f43f5e; }
+
+  .teacher-note {
+    max-width: 900px;
+    margin: 0 auto;
+    background: #e8dfc8;
+    border: 1px solid #c8b48a;
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-size: 12px;
+    line-height: 1.7;
+  }
+  .teacher-note h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: #3a2a0a;
+  }
+  .teacher-note .cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media print {
+    body { background: #fff; padding: 16px; }
+    .page-header { margin-bottom: 20px; }
+    .grid { gap: 10px; }
+    .no-print { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="eyebrow">3ème — English — Whodunnit activity</div>
+  <h1>Murder at Ravensmoor Estate</h1>
+  <div class="sub">Ravensmoor Estate · Saturday 14th November 1925</div>
+  <div class="instruction">
+    📱 Scan your QR code · Interrogate your suspect · Answer the quiz
+  </div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="teacher-note">
+  <h3>📋 Teacher's Notes — How to use these QR codes</h3>
+  <div class="cols">
+    <div>
+      <strong>Setup:</strong> Print this page and cut out each card. Stick one card on each desk or table group before the lesson. Each card links directly to that suspect's interrogation interface.<br/><br/>
+      <strong>Suggested grouping:</strong> 3–4 students per suspect, or one suspect per student for individual work.
+    </div>
+    <div>
+      <strong>Task sequence:</strong><br/>
+      1. Interrogate your suspect using Past Continuous &amp; Past Perfect<br/>
+      2. Fill in the Detective Worksheet<br/>
+      3. Share your findings with the class<br/>
+      4. Complete the 9-question quiz together<br/><br/>
+      <strong>The murderer is:</strong> Mrs. Potts 👩‍🍳 (do not reveal until the end!)
+    </div>
+  </div>
+</div>
+
+<div style="text-align:center;margin-top:16px;" class="no-print">
+  <button onclick="window.print()" style="background:#1a1008;color:#f5f0e8;border:none;padding:10px 24px;font-family:'IM Fell English',serif;font-size:14px;border-radius:6px;cursor:pointer;">
+    🖨️ Print QR Codes
+  </button>
+</div>
+
+<script>
+// URL de base — remplacer par l'URL réelle de l'artifact déployé
+// En attendant, on utilise une URL fictive représentative
+const BASE_URL = "https://brot2you.github.io/Ravensmoor";
+
+const SUSPECTS = [
+  { id: "colonel",     avatar: "🎖️", name: "Colonel Hartley",  role: "The Victim's Brother"},
+  { id: "doctor",      avatar: "👨‍⚕️", name: "Dr. Finch",         role: "The Family Doctor"},
+  { id: "niece",       avatar: "👩",  name: "Miss Clara Ashford",role: "The Niece"},
+  { id: "butler",      avatar: "🧑‍💼", name: "Mr. Reed",          role: "The Butler"},
+  { id: "lady",        avatar: "💎",  name: "Lady Voss",         role: "The Family Friend"},
+  { id: "gardener",    avatar: "👨‍🌾", name: "Joe Stubbs",        role: "The Gardener"},
+  { id: "housekeeper", avatar: "👩‍🍳", name: "Mrs. Potts",        role: "The Housekeeper"},
+];
+
+const grid = document.getElementById("grid");
+
+SUSPECTS.forEach(s => {
+  const url = BASE_URL + "?suspect=" + s.id;
+
+  const card = document.createElement("div");
+  card.className = "card";
+  card.dataset.id = s.id;
+
+  card.innerHTML = `
+    <span class="avatar">${s.avatar}</span>
+    <div class="name">${s.name}</div>
+    <div class="role">${s.role}</div>
+    <div class="qr-wrap" id="qr-${s.id}"></div>
+
+  `;
+
+  grid.appendChild(card);
+
+  // Générer le QR code
+  new QRCode(document.getElementById("qr-" + s.id), {
+    text: url,
+    width: 110,
+    height: 110,
+    colorDark: "#1a1008",
+    colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.M,
+  });
+});
+</script>
+</body>
+</html>

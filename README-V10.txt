@@ -1,0 +1,1 @@
+Ravensmoor V10: clickable illustrated objects overlay room backgrounds; fixed markers without pulse or click movement. Click an object to reveal its preview and language activity. Unillustrated objects use a static magnifier. Upload all files and assets folder to GitHub.

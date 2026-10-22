@@ -327,5 +327,61 @@ let ravenSelected = null;
  },true);
 })();
 </script>
+
+<style>
+.r14-panel{margin-top:20px;padding:23px;border:2px solid #b38a4c;border-radius:12px;background:#142b36;color:#f7e5c1}.r14-panel h3{color:#ffe0a1}.r14-pick{width:100%;padding:12px;background:#f2e3c5;color:#282018;border-radius:7px;border:1px solid #b58e50;margin:7px 0;font-size:15px}.r14-item{padding:13px;margin:12px 0;border:1px solid #95784a;border-radius:8px;background:#1b3440}.r14-item p{line-height:1.55}.r14-panel button{margin:6px 5px 6px 0}.r14-tag{font-size:12px;color:#f5d58d}.r14-answer{border-left:4px solid #bfa263;padding:14px;background:#253c45;margin:12px 0}.r14-note{color:#e9d7b7;font-size:13px}.r14-panel select{max-width:100%}
+</style>
+<script>
+/* V14: object-dependent questioning; no scripted culprit revelation. */
+(function(){
+const getEvidence=()=>Array.isArray(S.objectEvidence)?S.objectEvidence:[];
+const records=()=>S.v14Records||(S.v14Records=[]);
+const matches=()=>S.v14Comparisons||(S.v14Comparisons=[]);
+const obj=k=>{const [r,i]=k.split(':');return OBJECTS[r]?.[Number(i)]};
+const label=k=>obj(k)?.name||'Unknown object';
+const roomOf=k=>ROOMS.find(r=>r.id===k.split(':')[0]);
+const context=k=>{const [r,i]=k.split(':');return (typeof RAVEN_OBJECT_CLUES!=='undefined'&&RAVEN_OBJECT_CLUES[r]?.[Number(i)])||roomOf(k)?.text||'An object was discovered.'};
+const escapeHtml=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const focused={
+ 'potts|kitchen:0':'I had been preparing the trays downstairs. I cannot explain why the upstairs duty book contains my name at 10:15.',
+ 'potts|kitchen:1':'I had finished my duties downstairs by ten. That is what I remember.',
+ 'potts|study:0':'Lord Ashford had promised to discuss my wages. We had not settled the matter.',
+ 'potts|study:1':'I had not been entrusted with the study key that evening.',
+ 'colonel|study:0':'We had argued about the family estate earlier, but I had left before dinner.',
+ 'colonel|billiard:0':'Dr Finch and I had been playing cards from half past eight. He can confirm it.',
+ 'doctor|billiard:0':'The Colonel and I had been playing cards. I remember the scorecard on the table.',
+ 'doctor|study:2':'I had examined Lord Ashford earlier. I cannot account for that watch.',
+ 'clara|hall:1':'I had been reading upstairs when I heard footsteps in the corridor.',
+ 'clara|library:1':'My uncle had been worried about a letter at dinner. I did not see its contents.',
+ 'gardener|garden:0':'I had been working in the conservatory, but I cannot identify who left that glove.',
+ 'gardener|garden:1':'I had been trimming the roses earlier. I put my tools away before going home.',
+ 'reed|dining:2':'I had checked the guest list before dinner. The invitations were already delivered.',
+ 'reed|drawing:0':'Lady Voss and I had been in the drawing room during the evening service.',
+ 'voss|drawing:0':'Mr Reed had been serving tea while I waited in the drawing room.'
+};
+function reply(s,k){const specific=focused[s+'|'+k];if(specific)return specific;const person=findSuspect(s);const r=k.split(':')[0];if(r==='billiard'&&(s==='colonel'||s==='doctor'))return person.alibi;
+if(r==='garden'&&s==='gardener')return person.detail;
+if(r==='dining'&&s==='reed')return person.before;
+return `I cannot confirm who handled the ${label(k).toLowerCase()}. ${person.before}`;
+}
+function panel(){const root=document.querySelector('.wrap');if(!root)return null;const section=document.createElement('section');section.className='r14-panel';section.id='r14';root.append(section);return section}
+const priorInterrogate=interrogate;
+interrogate=function(){priorInterrogate();const box=panel();if(!box)return;const keys=getEvidence().filter(k=>obj(k));const chosen=keys.includes(S.activeEvidence)?S.activeEvidence:keys[0];box.innerHTML=`<span class="eyebrow">EVIDENCE-BASED INTERROGATION · V14</span><h3>Present a collected clue</h3><p class="r14-note">Only clues saved in your notebook can be presented. Each witness answers according to the selected object. Statements remain private until you ask.</p>${keys.length?`<label for="r14-evidence">Your evidence</label><select id="r14-evidence" class="r14-pick">${keys.map(k=>`<option value="${escapeHtml(k)}" ${k===chosen?'selected':''}>${escapeHtml(label(k))} — ${escapeHtml(roomOf(k)?.name||'')}</option>`).join('')}</select><p class="r14-note" id="r14-context">${escapeHtml(context(chosen))}</p><label for="r14-question">Ask a question in English (past perfect)</label><input id="r14-question" class="r14-pick" placeholder="What had you been doing before ten o'clock?"/><button class="gold-btn" data-r14="ask">Ask ${escapeHtml(findSuspect(S.selected).name)}</button><div id="r14-feedback" aria-live="polite"></div>`:'<p>Collect an object clue first: explore a room, solve its English question and add it to your notebook.</p><button class="outline-btn" data-action="go" data-id="board">Explore rooms</button>'}`;
+};
+const priorNotebook=notebook;
+notebook=function(){priorNotebook();const old=document.getElementById('raven-v13-links');if(old)old.remove();const box=panel();if(!box)return;const rec=records();box.innerHTML=`<span class="eyebrow">DETECTIVE REASONING · V14</span><h3>Compare witness statements</h3><p class="r14-note">No contradiction is revealed in advance. Interview witnesses with collected clues, then choose two statements and justify your interpretation.</p><p>${rec.length} evidence-based statements recorded.</p>${rec.map((x,i)=>`<div class="r14-item"><span class="r14-tag">Statement ${i+1} · ${escapeHtml(findSuspect(x.suspect).name)} · ${escapeHtml(label(x.key))}</span><p>“${escapeHtml(x.answer)}”</p><small>Question: ${escapeHtml(x.question)}</small></div>`).join('')}${rec.length>=2?`<label for="r14-a">First statement</label><select id="r14-a" class="r14-pick">${rec.map((x,i)=>`<option value="${i}">${i+1} · ${escapeHtml(findSuspect(x.suspect).name)} · ${escapeHtml(label(x.key))}</option>`).join('')}</select><label for="r14-b">Second statement</label><select id="r14-b" class="r14-pick">${rec.map((x,i)=>`<option value="${i}" ${i===1?'selected':''}>${i+1} · ${escapeHtml(findSuspect(x.suspect).name)} · ${escapeHtml(label(x.key))}</option>`).join('')}</select><label for="r14-why">Explain the possible contradiction in English</label><textarea id="r14-why" class="r14-pick" rows="3" placeholder="One witness said… However, the other witness had…"></textarea><button class="gold-btn" data-r14="compare">Record my deduction</button><p class="r14-note">Your deduction is a hypothesis, not an automatic proof of guilt.</p>`:'<p>Ask about clues in at least two interviews to compare their answers.</p>'}<h3>My deductions</h3>${matches().map(m=>`<div class="r14-item"><p>${escapeHtml(m.reason)}</p><small>Compared statements ${m.a+1} and ${m.b+1}</small></div>`).join('')||'<p>No deductions recorded yet.</p>'}`;
+};
+window.addEventListener('click',e=>{const btn=e.target.closest('[data-r14]');if(!btn)return;e.preventDefault();e.stopImmediatePropagation();if(btn.dataset.r14==='ask'){
+const k=document.getElementById('r14-evidence')?.value,q=document.getElementById('r14-question')?.value.trim(),out=document.getElementById('r14-feedback');if(!getEvidence().includes(k)||!obj(k)){out.textContent='Collect this clue first.';return}
+const grammar=analyseQuestion(q||'');if(!grammar.ok){out.innerHTML=`<div class="status">Language tip: ${escapeHtml(grammar.hint)}</div>`;return}
+const answer=reply(S.selected,k),r={suspect:S.selected,key:k,question:q,answer};if(!records().some(x=>x.suspect===r.suspect&&x.key===r.key&&x.question===r.question))records().push(r);
+S.objectInterviews=S.objectInterviews||[];const old=k+':'+S.selected;if(!S.objectInterviews.includes(old))S.objectInterviews.push(old);
+S.questions.push({suspect:findSuspect(S.selected).name,question:q,answer,topic:'object evidence'});store();out.innerHTML=`<div class="r14-answer"><b>${escapeHtml(findSuspect(S.selected).name)}:</b><p>“${escapeHtml(answer)}”</p><small>${escapeHtml(grammar.hint)}</small></div><button class="outline-btn" data-action="go" data-id="notebook">Compare testimonies in notebook →</button>`;
+}else if(btn.dataset.r14==='compare'){
+const a=Number(document.getElementById('r14-a')?.value),b=Number(document.getElementById('r14-b')?.value),reason=document.getElementById('r14-why')?.value.trim()||'';if(a===b||!records()[a]||!records()[b]){toast('Choose two different statements.');return}if(reason.split(/\s+/).length<10){toast('Explain your deduction in at least 10 English words.');return}matches().push({a,b,reason});store();notebook();toast('Deduction recorded. It is not proof until you check the evidence.');}
+},true);
+window.addEventListener('change',e=>{if(e.target.id==='r14-evidence'){const c=document.getElementById('r14-context');if(c)c.textContent=context(e.target.value)}},true);
+})();
+</script>
 </body>
 </html>

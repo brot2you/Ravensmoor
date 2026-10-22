@@ -1,0 +1,1 @@
+RAVENSMOOR V8 — 8 individually generated Victorian room illustrations, each a standalone HD WebP file. Room scenes include 3 clickable prompts (evidence, chronology, English questions). Existing detective activities retained. Upload index.html and assets/ to GitHub Pages. This package is not deployed automatically.

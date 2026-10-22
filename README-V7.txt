@@ -1,0 +1,1 @@
+RAVENSMOOR V7 — 9 individual HD images (manor, board, seven portraits). Upload index.html AND assets/ to the root of GitHub Pages repository. No website publication performed. All English learning features inherited from V6.

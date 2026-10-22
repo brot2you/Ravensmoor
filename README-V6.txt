@@ -1,0 +1,1 @@
+RAVENSMOOR V6 - Visual update based on V5. Includes cropped individual assets from a single 1536x1024 source image. Images are NOT natively high-resolution; to achieve true HD, regenerate each scene and portrait separately. No GitHub publication has been performed. Upload index.html and assets/ together.

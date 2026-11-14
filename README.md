@@ -1,4 +1,4 @@
-# Ravensmoor — The Mystery Board Game (V24)
+# Ravensmoor — The Mystery Board Game (V25)
 
 Jeu d’enquête victorien pour travailler le **past continuous** (ce que chacun était en train de faire) et le **past perfect** (ce qui s’était passé avant) en anglais (3e, A2+/B1).
 Six enquêtes complètes, un coupable différent à chaque fois : **Murder at Ravensmoor**, **The Missing Sapphire**, **The Midnight Letter**, **The Locked Library**, **The Last Train** (dans le train de nuit) et **The Ravensmoor Secret**, qui relie toutes les autres.

@@ -1,6 +1,6 @@
-# Ravensmoor — The Mystery Board Game (V21)
+# Ravensmoor — The Mystery Board Game (V24)
 
-Jeu d’enquête victorien pour apprendre le **past perfect simple et continu** en anglais (3e, A2+/B1).
+Jeu d’enquête victorien pour travailler le **past continuous** (ce que chacun était en train de faire) et le **past perfect** (ce qui s’était passé avant) en anglais (3e, A2+/B1).
 Six enquêtes complètes, un coupable différent à chaque fois : **Murder at Ravensmoor**, **The Missing Sapphire**, **The Midnight Letter**, **The Locked Library**, **The Last Train** (dans le train de nuit) et **The Ravensmoor Secret**, qui relie toutes les autres.
 
 Ordre chronologique de l’histoire : 02 (déc. 1890) → 05 (janv. 1891) → 04 (mars) → 03 (juin) → 06 (3 oct.) → 01 (10 oct.).
@@ -24,7 +24,7 @@ Aucun compte, aucun serveur, aucune IA en ligne : tout tourne dans le navigateur
 - 8 lieux (manoir ou train), 24 objets illustrés, 7 témoins, 1 menteur par enquête.
 - Chaque indice se révèle après un défi de langue ; interrogatoires écrits avec correction des questions.
 - Carnet, grille de déduction, Language Lab (cours, 10 QCM, 5 questions à reconstruire, chronologie).
-- Accusation notée sur 10 (coupable, 3 indices, mensonge, past perfect), 3 tentatives, rang de détective.
+- Accusation notée sur 10 (coupable, 3 indices, mensonge, past continuous + past perfect), 3 tentatives, rang de détective.
 - Espace enseignant en français : déroulé, cartes QR, fiche élève, corrigé, réinitialisation.
 
 Technique : fichier HTML unique, JavaScript ES5 (compatible iOS Safari), données dans un bloc JSON.
